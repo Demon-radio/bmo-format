@@ -17,6 +17,14 @@ npm package. Changes are tracked here and in the project roadmap.
 - PPTX embedded audio/video is preserved as SHA-256-addressed assets; the
   deterministic round-trip fixture retains 2/2 media assets.
 
+### Fixed and verified
+
+- PPTX export and fixture code parse on Python 3.11; the clean-checkout
+  GitHub Actions matrix passes current-source Python, Rust, interop, SDK,
+  and Windows app checks.
+- Converter tests merge their measurements into `compat_matrix.json`
+  instead of erasing real-world corpus results.
+
 ## JavaScript SDK 0.1.0-alpha.0 — 2026-10-17
 
 - Published `bmo-format-sdk@0.1.0-alpha.0` on npm under the `alpha` tag.

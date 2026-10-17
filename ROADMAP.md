@@ -12,13 +12,12 @@
   with CoW saves, web studio, Windows exe + file association, CLI, fuzz,
   benchmarks, CI workflow
 - Rust source includes optional ZSTD/DEFLATE, AES-GCM, ChaCha/XChaCha,
-  and ECDSA/RSA-PSS verification; however, the current source has not
-  been freshly built here. The cached Rust executable passed 8/10
-  interop checks and reports `UPGRADE_REQUIRED` for DEFLATE/XChaCha;
-  it predates the latest Rust source changes. A fresh build is blocked
-  locally by the missing MSVC `link.exe`. Earlier recorded interop
-  results (byte-identical `hello` writer, Python-written AES/ZSTD files,
-  and ChaCha golden decrypt byte-parity) are not current-source proof.
+  and ECDSA/RSA-PSS verification. Current source, codec/signature tests,
+  and required Python/Rust interop pass in GitHub Actions. The local
+  cached Rust executable still reports `UPGRADE_REQUIRED` for
+  DEFLATE/XChaCha and predates current Rust source; a fresh local build is
+  blocked by missing MSVC `link.exe`. Earlier recorded interop results
+  are not current-source proof.
   Pinned requirements + lock; OOXML package-integrity checks
   (`test_export_fidelity.py`)
 - AES-KW password wrap (Argon2id → RFC 3394) in the Python kit: RFC
@@ -30,9 +29,9 @@
 
 ## Next, in order
 
-1. **Rust toolchain + codecs.** Codec and signature support is present
-   behind optional features. Remaining: build current source, verify the
-   test suite and interop against that build, and restore rustfmt/clippy.
+1. **Rust toolchain + codecs.** Current source, codec/signature tests, and
+   interop pass in GitHub Actions. Remaining: restore local `rustfmt` and
+   `clippy` verification when the toolchain is available.
 2. **AES-KW password wrap.** DONE (Python kit). RFC 3394 §4.1/§4.6
    vectors + `password.bmo` golden (KEK/unwrapped-key/plain pinned);
    wrong password → `AUTH_FAILED`, keyless → `NEED_KEY`, bounds →
@@ -58,7 +57,7 @@
    is published. Remaining: SBOM/dependency audit, signed `BMOViewer.exe`
    + versioned GitHub Releases with checksums + release notes,
    and a `pip install bmo` kit. No further publishing without
-   authorization (plan §16).
+   explicit authorization for each release (plan §16).
 6. **Security process.** `SECURITY.md` contact, advisories workflow,
    dependency audit in CI, second fuzz target (CBOR/model layer).
 7. **Standardization prep.** License final sign-off (human lawyer),

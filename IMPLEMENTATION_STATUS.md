@@ -1,19 +1,16 @@
-# BMO Implementation Status (evidence-based, 2026-10-16)
+# BMO Implementation Status (evidence-based, 2026-10-17)
 
 Legend: ✅ implemented+tested · 🟡 partial · 📝 specified, not implemented ·
 ❓ unverified here · ⛔ blocked externally.
 
-The totals in `docs/FINAL_REPORT.md` are previously recorded results, not
-a fresh clean-checkout or release-candidate run. Current targeted checks
-in this session passed: Python domain 17/17, converter 10/10, real-world
-converter 4/4, MCP SDK 6/6, MCP server 4/4, calc 10/10, renderer 6/6,
-CLI 5/5, JS SDK 6/6, and 1500/1500 fuzz inputs without escaped
-exceptions. Current Rust interop against the cached executable is 8/10;
-it reports `UPGRADE_REQUIRED` for DEFLATE and XChaCha. That executable
-was built 2026-10-16, before the Rust domain source change on
-2026-10-17, so this is not a valid test of current Rust source. A fresh
-build is blocked locally by missing `link.exe`. Full log of the earlier
-recorded run: docs/FINAL_REPORT.md.
+A clean-checkout GitHub Actions run passed on 2026-10-17, including the
+Python OS/version matrix, JavaScript SDK tests, current-source Rust tests
+and Python/Rust interop, and the Windows frozen-app smoke suite. The local
+`tests/run_all.py` run passed every suite except two interop checks against
+the cached Rust executable, which returned `UPGRADE_REQUIRED` for DEFLATE
+and XChaCha. That executable predates the current Rust source; a fresh
+local build remains blocked by missing `link.exe`. The earlier recorded
+results are in `docs/FINAL_REPORT.md`.
 
 ## Format & container (RFC-0001)
 
@@ -52,8 +49,8 @@ recorded run: docs/FINAL_REPORT.md.
 | Capability | Status | Evidence |
 |---|---|---|
 | Python reference kit (reader/builder/validate) | ✅ | `tests/conformance/bmo_reader.py` + full suite |
-| Rust reference core | 🟡 | Current source includes codecs and signature verification, but was not freshly compiled here; MSVC build is blocked by missing `link.exe`, and the GNU/Zig attempt also failed |
-| Cross-implementation interop (Rust ↔ Python) | 🟡 | Cached executable: `tests/interop/test_rust_interop.py` 8/10; DEFLATE and XChaCha return `UPGRADE_REQUIRED`. It predates current Rust source; rerun after a successful fresh build |
+| Rust reference core | ✅ CI / 🟡 local | Current source and codec/signature features pass the GitHub Actions Rust test matrix; local MSVC build is blocked by missing `link.exe` |
+| Cross-implementation interop (Rust ↔ Python) | ✅ CI / 🟡 local | Required current-source CI interop passes; local cached executable remains 8/10 because it predates the source and returns `UPGRADE_REQUIRED` for DEFLATE/XChaCha |
 | JS SDK (container reader) | ✅ | `sdk/js/`, `node --test sdk/js/test.js` 6/6, opens all goldens; published as [`bmo-format-sdk@0.1.0-alpha.0`](https://www.npmjs.com/package/bmo-format-sdk) under the `alpha` tag |
 | TypeScript types | ✅ | `sdk/js/bmo.d.ts` matches runtime exports and passes strict TypeScript declaration checking |
 | MCP server (9 tools, stdio JSON-RPC) | ✅ + SDK-proven | `mcp/`, `test_mcp.py`, `test_mcp_sdk.py` (real v2 client drives it) |
@@ -71,10 +68,10 @@ recorded run: docs/FINAL_REPORT.md.
 
 ## Blocked / deferred (honest list)
 
-- Current Rust build and tests on this machine: MSVC compilation is
-  blocked by missing `link.exe`; the attempted GNU/Zig build also failed.
-  CI is configured but has not been run on GitHub from here. rustfmt/clippy
-  components are unavailable.
+- Current Rust build on this machine: MSVC compilation is blocked by
+  missing `link.exe`; the attempted GNU/Zig build also failed. Current
+  source is compiled and tested in GitHub Actions; rustfmt/clippy remain
+  unavailable locally.
 - Word/Excel/PowerPoint/LibreOffice visual check of exports: structure
   valid + oracle + package integrity green; app eyeball pending (LibreOffice not installed).
 - Rust-side AES-KW/Argon2id: password-wrapped files fail closed per-chunk
@@ -85,9 +82,10 @@ recorded run: docs/FINAL_REPORT.md.
   nonce per payload (verified absent by grep, 2026-10-16).
 - Scanned-PDF OCR: out of scope by design (counted, never hallucinated).
 - Licensing final sign-off: needs a human lawyer (intent: Apache-2.0 code).
-- GitHub Actions has run on GitHub; early runs exposed Python 3.11
-  incompatibility in nested f-strings. A portable syntax fix is committed;
-  rerun status is pending.
+- GitHub Actions passes on the current source. Early runs exposed
+  Python 3.11-incompatible f-strings in the PPTX exporter and fixture;
+  both are fixed, and converter tests now preserve unrelated measured
+  entries in `compat_matrix.json`.
 - Public source repository: https://github.com/Demon-radio/bmo-format.
 - The public alpha uses the documented Apache-2.0 code and CC BY 4.0
   specification licenses; independent legal review remains outstanding.

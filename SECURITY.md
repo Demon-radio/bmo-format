@@ -2,11 +2,11 @@
 
 ## Reporting a vulnerability
 
-Please do not report vulnerabilities in public issues. Use the repository's
-**Security** tab and choose **Report a vulnerability** to send a private
-advisory to the maintainers. If private reporting is unavailable, contact
-the repository owner through GitHub and request a private channel. Include
-the affected version or commit, impact, and a minimal reproduction when safe.
+Please do not report vulnerabilities in public issues. If the repository's
+**Security** tab offers **Report a vulnerability**, use it to send a private
+advisory to the maintainers. If that option is unavailable, contact the
+repository owner through GitHub and request a private channel. Include the
+affected version or commit, impact, and a minimal reproduction when safe.
 
 This project is alpha software. No response-time or remediation SLA is
 promised. Do not include real user documents, credentials, or secret keys in

@@ -82,7 +82,8 @@ python tests/run_all.py          # all portable suites, exit 0 = green
 node --test sdk/js/test.js       # JS SDK suite
 ```
 
-Install the JavaScript container reader with `npm install bmo-format-sdk`.
+Install the JavaScript container reader with
+`npm install bmo-format-sdk@alpha`.
 Its API and limitations are documented in [sdk/js/README.md](./sdk/js/README.md).
 
 With a Rust toolchain:

@@ -4,10 +4,9 @@ All notable changes to BMO will be documented here.
 
 ## Unreleased
 
-This is the current 0.x alpha development version. No versioned public
-release has been published. Changes are tracked in the project history
-and roadmap; a release entry will be added when a release is authorized
-and its contents have been verified.
+This is the current 0.x alpha development version. The BMO format has no
+stable release; the JavaScript SDK is distributed separately as an alpha
+npm package. Changes are tracked here and in the project roadmap.
 
 ### Added
 

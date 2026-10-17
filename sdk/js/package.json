@@ -3,6 +3,14 @@
   "version": "0.1.0-alpha.0",
   "description": "Zero-dependency JavaScript reader for BMO binary document containers",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Demon-radio/bmo-format.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Demon-radio/bmo-format/issues"
+  },
+  "homepage": "https://github.com/Demon-radio/bmo-format/tree/main/sdk/js#readme",
   "main": "bmo.js",
   "types": "bmo.d.ts",
   "exports": {

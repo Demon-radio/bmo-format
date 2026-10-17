@@ -11,7 +11,7 @@ with a stable error code.
 ## Install
 
 ```sh
-npm install bmo-format-sdk
+npm install bmo-format-sdk@alpha
 ```
 
 Requires Node.js 18 or newer.

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Demon-radio/bmo-format.git"
+    "url": "git+https://github.com/Demon-radio/bmo-format.git"
   },
   "bugs": {
     "url": "https://github.com/Demon-radio/bmo-format/issues"

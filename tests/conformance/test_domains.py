@@ -221,6 +221,32 @@ def t_nested_table_in_cell():
         (9, E("run", 8, {"text": "nested"})),
     ])
 
+def t_list_def_level_formatting():
+    V([
+        (1, E("document", 0, {})),
+        (2, E("list-def", 1, {
+            "id": "L1", "style": "decimal", "start": 5, "text": "%1.",
+            "levels": [{"level": 1, "style": "lowerLetter",
+                        "start": 3, "text": "%2)"}],
+        })),
+    ])
+    for levels in (
+        [{"level": 1}, {"level": 1}],
+        [{"level": 0}],
+        [{"level": 9}],
+        [{"level": 1, "start": -1}],
+        [{"level": 1, "text": 3}],
+    ):
+        try:
+            V([
+                (1, E("document", 0, {})),
+                (2, E("list-def", 1, {"id": "L1", "levels": levels})),
+            ])
+        except ModelErr as e:
+            assert str(e) == "STRUCTURE_INVALID", str(e)
+        else:
+            raise AssertionError(f"invalid list level formatting accepted: {levels}")
+
 def t_table_under_paragraph_rejected():
     try:
         V([(1, E("document", 0, {})), (2, E("paragraph", 1, {})),
@@ -251,6 +277,7 @@ if __name__ == "__main__":
                      ("cell_under_paragraph", t_cell_under_paragraph),
                      ("row_under_page", t_row_under_page),
                      ("nested_table_in_cell", t_nested_table_in_cell),
+                     ("list_def_level_formatting", t_list_def_level_formatting),
                      ("table_under_paragraph", t_table_under_paragraph_rejected),
                      ("dup_sheet", t_dup_sheet_name)]:
         check(name, fn)

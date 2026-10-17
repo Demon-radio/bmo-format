@@ -217,6 +217,52 @@ fn accepts_nested_table_in_cell() {
 }
 
 #[test]
+fn validates_list_definition_level_formatting() {
+    let valid = bodies(vec![
+        (1, enc_env("document", 0, Value::Map(vec![]))),
+        (2, enc_env(
+            "list-def",
+            1,
+            Value::Map(vec![
+                (txt("id"), txt("L1")),
+                (txt("style"), txt("decimal")),
+                (txt("start"), Value::UInt(5)),
+                (txt("text"), txt("%1.")),
+                (txt("levels"), Value::Array(vec![Value::Map(vec![
+                    (txt("level"), Value::UInt(1)),
+                    (txt("style"), txt("lowerLetter")),
+                    (txt("start"), Value::UInt(3)),
+                    (txt("text"), txt("%2)")),
+                ])])),
+            ]),
+        )),
+    ]);
+    assert!(valid.is_ok());
+
+    for levels in [
+        vec![
+            Value::Map(vec![(txt("level"), Value::UInt(1))]),
+            Value::Map(vec![(txt("level"), Value::UInt(1))]),
+        ],
+        vec![Value::Map(vec![(txt("level"), Value::UInt(0))])],
+        vec![Value::Map(vec![(txt("level"), Value::UInt(9))])],
+        vec![Value::Map(vec![
+            (txt("level"), Value::UInt(1)),
+            (txt("start"), Value::Int(-1)),
+        ])],
+    ] {
+        let invalid = bodies(vec![
+            (1, enc_env("document", 0, Value::Map(vec![]))),
+            (2, enc_env("list-def", 1, Value::Map(vec![
+                (txt("id"), txt("L1")),
+                (txt("levels"), Value::Array(levels)),
+            ]))),
+        ]);
+        assert_eq!(invalid.unwrap_err(), BmoError::BadStructure);
+    }
+}
+
+#[test]
 fn rejects_table_under_paragraph() {
     let r = bodies(vec![
         (1, enc_env("document", 0, Value::Map(vec![]))),

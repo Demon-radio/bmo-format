@@ -58,7 +58,7 @@ results are in `docs/FINAL_REPORT.md`.
 | Desktop editor (view+edit, CoW saves) | ✅ | `apps/desktop/viewer.py`, `test_viewer.py`, GUI smoke 6/6 |
 | Web Studio | ✅ | `apps/web/server.py`, `test_web.py` |
 | Windows .exe (PyInstaller one-file, ~11 MB) | ✅ | `dist/BMOViewer.exe`, `tests/test_exe.py` 5/5, association install/uninstall round-trip verified |
-| DOCX/XLSX/PPTX/CSV/MD importers | ✅ | crafted 100% round-trips (except documented notes drop); nested DOCX tables round-trip with all 35/35 model elements retained (`compat_matrix.json`: `docx-complex`) |
+| DOCX/XLSX/PPTX/CSV/MD importers | ✅ | crafted 100% round-trips (except documented notes drop); nested DOCX tables retain 35/35 model elements (`docx-complex`); named-style inheritance, run/paragraph properties, spacing/indents, and multilevel numbering retain 11/11 (`docx-style-depth`) |
 | PPTX embedded audio/video | ✅ Python path | `pptx-media`: 2/2 media assets retained byte-for-byte through import → BMO asset validation → PPTX export → re-import; model schema is mirrored in Python/Rust validators |
 | PDF importer (pdfplumber tables/text + pypdf images) | ✅ | generated-PDF vector; multilingual corpus (Arabic/Hebrew/CJK lines + Arabic-cell table + image, system-font-gated asserts) validates + deterministic (`test_realworld.py` real-pdf-corpus, 2026-10-16) |
 | Real Office files | ✅ validity | 3 genuine binaries: no crash, valid BMO, deterministic; images byte-identical; + multilingual PDF corpus (4 scripts detected, 27 objects, matrix entry `real-pdf-corpus`) |

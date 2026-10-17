@@ -47,9 +47,11 @@
    Hebrew/CJK and Arabic-cell table; deterministic real binary, fonts-gated
    asserts, `real-pdf-corpus` matrix entry); nested DOCX tables preserved
    through import, validation, and export (`docx-complex`: 35/35 model
-   elements retained). Remaining:
-   external-producer PDF corpus, charts, Excel drawings, and DOCX style
-   mapping depth.
+   elements retained); named DOCX styles and inheritance, run/paragraph
+   properties, spacing/indents, numbering formats, markers, levels, and
+   restarts (`docx-style-depth`: 11/11 model elements retained). Remaining:
+   external-producer PDF corpus, charts, Excel drawings, and less-common
+   OOXML style/numbering properties outside the current model.
 4. **Second independent implementation to Accepted.** JS SDK covers the
    container; promote it (types + model layer) or port Python kit to a
    second language, then publish the interop report (RFC-0008 §4).

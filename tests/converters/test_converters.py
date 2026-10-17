@@ -133,6 +133,45 @@ def t_docx_complex():
     MATRIX["docx-complex"] = {"fidelity": fib, "import_stats": st1}
     assert fib["overall_pct"] == 100.0, json.dumps(fib, indent=1)[:2000]
 
+def t_docx_style_depth():
+    data = docx.sample_docx_style_depth()
+    title1, envs1, st1, _ = docx.import_docx(data)
+    styles = {e["body"].get("name"): e for e in envs1 if e["kind"] == "style"}
+    heading = styles["ReportHeading"]
+    assert styles["BodyText"]["body"]["basedOn"] == {"$ref": styles["Normal"]["oid"]}
+    assert heading["body"]["basedOn"] == {"$ref": styles["BodyText"]["oid"]}
+    assert heading["body"]["para"]["spaceAfter"] == 180
+    assert heading["body"]["para"]["lineRule"] == "atLeast"
+    assert heading["body"]["run"] == {"b": 1, "size": 16, "color": "1F4E79"}
+    paragraph = next(e for e in envs1 if e["kind"] == "paragraph"
+                     and "spacing" in e["body"])
+    assert paragraph["body"]["spacing"] == {
+        "spaceBefore": 300, "spaceAfter": 140, "line": 360,
+        "lineRule": "exact", "left": 240, "firstLine": 120,
+    }
+    list_def = next(e for e in envs1 if e["kind"] == "list-def")
+    assert list_def["body"]["start"] == 5
+    assert list_def["body"]["text"] == "%1."
+    assert list_def["body"]["levels"] == [
+        {"level": 1, "style": "lowerLetter", "start": 3, "text": "%2)"}
+    ]
+    assert sorted(e["body"]["list"]["level"] for e in envs1
+                  if e["kind"] == "paragraph" and "list" in e["body"]) == [0, 1]
+
+    to_bmo("document", ["model.envelope-v1", "text.v1"], title1,
+           bytes(15) + b"\x16", envs1)
+    approx = []
+    out2 = docx.export_docx(envs1, title1, approx)
+    title2, envs2, st2, _ = docx.import_docx(out2)
+    assert title2 == title1
+    assert approx == [], approx
+    fib = common.fidelity(canon(envs1), canon(envs2))
+    MATRIX["docx-style-depth"] = {
+        "fidelity": fib, "import_stats": st1,
+        "export_approximations": approx,
+    }
+    assert fib["overall_pct"] == 100.0, json.dumps(fib, indent=1)[:2000]
+
 def t_xlsx_complex():
     data = xlsx.sample_xlsx_complex()
     title1, envs1, st1, _ = xlsx.import_xlsx(data)
@@ -298,6 +337,7 @@ if __name__ == "__main__":
                      ("csv", t_csv), ("markdown", t_markdown),
                      ("pdf-import", t_pdf_import),
                      ("docx-complex", t_docx_complex), ("xlsx-complex", t_xlsx_complex),
+                     ("docx-style-depth", t_docx_style_depth),
                      ("pptx-complex", t_pptx_complex),
                      ("pptx-media", t_pptx_media)]:
         check(name, fn)

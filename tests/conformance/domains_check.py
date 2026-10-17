@@ -160,6 +160,24 @@ def validate_bodies(envs: list):
             if not isinstance(lid, str) or not lid or lid in list_ids:
                 raise ModelErr("STRUCTURE_INVALID")
             list_ids.add(lid)
+            _opt_text(b, "style")
+            _opt_text(b, "text")
+            _opt_uint(b, "start")
+            if "levels" in b:
+                levels = b["levels"]
+                if not isinstance(levels, list):
+                    raise ModelErr("STRUCTURE_INVALID")
+                seen_levels = set()
+                for level in levels:
+                    level = _req_map(level, "list level")
+                    number = level.get("level")
+                    if (not _is_int(number) or not 1 <= number <= 8
+                            or number in seen_levels):
+                        raise ModelErr("STRUCTURE_INVALID")
+                    seen_levels.add(number)
+                    _opt_text(level, "style")
+                    _opt_text(level, "text")
+                    _opt_uint(level, "start")
     sheets_by_parent = {}
     for e in envs:
         if e["kind"] == "sheet":

@@ -30,6 +30,34 @@ fn req_map<'a>(body: &'a Value) -> BmoResult<&'a Vec<(Value, Value)>> {
     as_map(body).ok_or_else(bad)
 }
 
+fn check_list_def(pairs: &[(Value, Value)]) -> BmoResult<()> {
+    opt_text(pairs, "style")?;
+    opt_text(pairs, "text")?;
+    opt_uint(pairs, "start")?;
+    if let Some(levels) = get(pairs, "levels") {
+        let levels = match levels {
+            Value::Array(levels) => levels,
+            _ => return Err(bad()),
+        };
+        let mut seen = HashSet::new();
+        for level in levels {
+            let pairs = req_map(level)?;
+            opt_text(pairs, "style")?;
+            opt_text(pairs, "text")?;
+            opt_uint(pairs, "start")?;
+            match get(pairs, "level") {
+                Some(Value::UInt(n)) if (1..=8).contains(n) => {
+                    if !seen.insert(*n) {
+                        return Err(bad());
+                    }
+                }
+                _ => return Err(bad()),
+            }
+        }
+    }
+    Ok(())
+}
+
 fn opt_text(pairs: &[(Value, Value)], key: &str) -> BmoResult<()> {
     match get(pairs, key) {
         None => Ok(()),
@@ -285,6 +313,7 @@ pub fn validate_bodies(entries: &[DirEntry], load: &dyn Fn(u64) -> BmoResult<Vec
             let pairs = req_map(&e.body)?;
             match get(pairs, "id") {
                 Some(Value::Text(id)) if !id.is_empty() => {
+                    check_list_def(pairs)?;
                     if !list_ids.insert(id.clone()) {
                         return Err(bad());
                     }

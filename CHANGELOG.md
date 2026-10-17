@@ -12,6 +12,9 @@ npm package. Changes are tracked here and in the project roadmap.
 
 - Nested DOCX tables are preserved through import, model validation, and
   export; the complex DOCX fixture retains 35/35 model elements.
+- DOCX named-style inheritance, run/paragraph formatting, paragraph spacing
+  and indents, and multilevel list formats/markers/restarts are preserved;
+  the measured `docx-style-depth` round-trip retains 11/11 model elements.
 - TypeScript declarations now match the JavaScript SDK's runtime export
   shapes and include the `info` and `fail` APIs.
 - PPTX embedded audio/video is preserved as SHA-256-addressed assets; the

@@ -33,8 +33,11 @@
   Slice [x]: multilingual PDF corpus (Arabic/Hebrew/CJK + Arabic-cell
   table + image) green + deterministic (`realworld` matrix entry,
   2026-10-16). Slice [x]: nested DOCX tables preserved through
-  import/validation/export (`docx-complex`, 35/35 retained). Remaining:
-  corpus from external producers + charts/drawings/media/style depth.
+  import/validation/export (`docx-complex`, 35/35 retained). Slice [x]:
+  DOCX named-style inheritance, spacing/indents, and multilevel numbering
+  round-trip (`docx-style-depth`, 11/11 retained). Remaining: corpus from
+  external producers, charts, Excel drawings, and less-common OOXML
+  style/numbering properties.
 - [ ] #5 `mcp` protocol drift guard: pin `mcp<3` or re-verify on SDK bumps
   (interop test exists: `tests/test_mcp_sdk.py`; requirements.txt pins
   `mcp==2.3.0`).
@@ -46,7 +49,9 @@
 - [ ] #8 Print/PDF export.
 - [ ] #9 Signed releases + checksums + release notes; `pip install bmo`;
   npm publish. NO publishing without authorization.
-- [ ] #10 Lockfiles/SBOM + dependency audit in CI.
+- [x] #10 Lockfiles/SBOM + dependency audit in CI. Python and Rust lock
+  audits pass; the Python CycloneDX SBOM uploads as a CI artifact. RustSec's
+  documented unpatched RSA private-key advisory remains narrowly allow-listed.
 - [ ] #11 SECURITY contact + disclosure process; legal sign-off on licenses.
 
 ## P3 — standard maturity

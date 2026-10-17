@@ -513,6 +513,45 @@
         "cjk": true
       },
       "valid_bmo": true
+    },
+    "external-pdf-producers": {
+      "cases": [
+        {
+          "file": "w3c-dummy.pdf",
+          "producer": "OpenOffice.org 2.1",
+          "sha256": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1885e6adb4",
+          "pages": 1,
+          "rotations": [
+            0
+          ],
+          "expected_lines": 1,
+          "retained_lines": 1,
+          "objects": 3,
+          "valid_bmo": true,
+          "deterministic": true
+        },
+        {
+          "file": "pdfjs-hello-world-rotated.pdf",
+          "producer": null,
+          "sha256": "ab0cb700cd5e5338fd676dfca25becae800acd2be03a4e57856485b8cfd2d28b",
+          "pages": 5,
+          "rotations": [
+            90,
+            90,
+            90,
+            90,
+            90
+          ],
+          "expected_lines": 10,
+          "retained_lines": 10,
+          "objects": 21,
+          "valid_bmo": true,
+          "deterministic": true
+        }
+      ],
+      "expected_lines": 11,
+      "retained_lines": 11,
+      "text_retention_pct": 100.0
     }
   },
   "docx-style-depth": {
@@ -567,6 +606,46 @@
         "drawings": 0
       }
     },
+    "export_approximations": []
+  },
+  "xlsx-images": {
+    "fidelity": {
+      "by_kind": {
+        "image": {
+          "kept": 3,
+          "of": 3,
+          "pct": 100.0
+        },
+        "sheet": {
+          "kept": 1,
+          "of": 1,
+          "pct": 100.0
+        },
+        "workbook": {
+          "kept": 1,
+          "of": 1,
+          "pct": 100.0
+        }
+      },
+      "overall_pct": 100.0,
+      "kept": 5,
+      "of": 5,
+      "dropped": [],
+      "added": []
+    },
+    "import_stats": {
+      "sheets": 1,
+      "cells": 0,
+      "cell_types": {},
+      "formulas": 0,
+      "merges": 0,
+      "numfmts": 0,
+      "cross_sheet_refs": 0,
+      "partial_ranges": 0,
+      "images_imported": 3,
+      "skipped": {}
+    },
+    "assets_preserved": 3,
     "export_approximations": []
   }
 }

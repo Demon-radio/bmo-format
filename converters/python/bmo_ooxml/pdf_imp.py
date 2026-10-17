@@ -6,7 +6,7 @@ line order; table text is excluded from the flow (no duplication).
 """
 import io
 
-from .common import mime_for, sniff_script, sniff_script
+from .common import mime_for, sniff_script
 
 class Ctx:
     def __init__(self):
@@ -66,23 +66,15 @@ def import_pdf(data: bytes):
                 if not rows or not any(any(c.strip() for c in r) for r in rows):
                     continue
                 tables.append((t.bbox, rows))
-            # flow text = chars outside table bboxes, grouped in visual lines
-            try:
-                chars = [c for c in page.chars
-                         if not any(_in_bbox(c["x0"], c["top"], c["x1"], c["bottom"], b)
-                                    for b, _ in tables)]
-            except Exception:
-                chars = []
-            lines, cur, last_top = [], [], None
-            for c in sorted(chars, key=lambda c: (round(c["top"], 1), c["x0"])):
-                if last_top is not None and abs(c["top"] - last_top) > 3:
-                    if "".join(x["text"] for x in cur).strip():
-                        lines.append("".join(x["text"] for x in cur))
-                    cur = []
-                cur.append(c)
-                last_top = c["top"]
-            if "".join(x["text"] for x in cur).strip():
-                lines.append("".join(x["text"] for x in cur))
+            # Let pdfplumber group glyphs so rotated text and producer-specific
+            # character spacing follow the PDF text matrix rather than page axes.
+            text_page = page.filter(
+                lambda obj: obj["object_type"] != "char"
+                or not any(_in_bbox(
+                    obj["x0"], obj["top"], obj["x1"], obj["bottom"], bbox)
+                    for bbox, _ in tables))
+            lines = [line for line in (text_page.extract_text() or "").splitlines()
+                     if line.strip()]
             if not lines and not tables:
                 ctx.stats["skipped"]["empty_pages"] += 1
             for line in lines:

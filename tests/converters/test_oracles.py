@@ -54,6 +54,25 @@ def t_export_xlsx_readable():
     assert ws["C1"].number_format == "0.00%"
     assert ws["A2"].value is True and ws["B2"].value == "#DIV/0!"
 
+def t_export_xlsx_image_readable():
+    import openpyxl
+
+    title, envs, _, assets = xlsx.import_xlsx(xlsx.sample_xlsx_images())
+    approximations = []
+    out = xlsx.export_xlsx(envs, title, approximations, assets)
+    assert approximations == [], approximations
+    wb = openpyxl.load_workbook(BytesIO(out))
+    images = wb["Images"]._images
+    assert len(images) == 3, images
+    anchors = {type(image.anchor).__name__: image.anchor for image in images}
+    two_cell = anchors["TwoCellAnchor"]
+    one_cell = anchors["OneCellAnchor"]
+    absolute = anchors["AbsoluteAnchor"]
+    assert (two_cell._from.col, two_cell._from.row) == (1, 2)
+    assert (two_cell.to.col, two_cell.to.row) == (3, 5)
+    assert (one_cell._from.col, one_cell._from.row) == (5, 6)
+    assert (absolute.pos.x, absolute.pos.y) == (-12700, 25400)
+
 def t_export_pptx_readable():
     from pptx import Presentation
     title, envs, _, _ = pptx.import_pptx(pptx.sample_pptx())
@@ -136,6 +155,7 @@ if __name__ == "__main__":
     print("oracle conformance (real libraries both ways):")
     for name, fn in [("export_docx_readable", t_export_docx_readable),
                      ("export_xlsx_readable", t_export_xlsx_readable),
+                     ("export_xlsx_image_readable", t_export_xlsx_image_readable),
                      ("export_pptx_readable", t_export_pptx_readable),
                      ("differential_docx", t_differential_docx),
                      ("differential_xlsx", t_differential_xlsx),

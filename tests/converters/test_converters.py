@@ -190,6 +190,57 @@ def t_xlsx_complex():
     MATRIX["xlsx-complex"] = {"fidelity": fib, "import_stats": st1}
     assert fib["overall_pct"] == 100.0, json.dumps(fib, indent=1)[:2000]
 
+def t_xlsx_images():
+    title1, envs1, st1, assets1 = xlsx.import_xlsx(xlsx.sample_xlsx_images())
+    assert st1["images_imported"] == 3, st1
+    images1 = [e for e in envs1 if e["kind"] == "image"]
+    assert len(images1) == 3
+    assert images1[0]["body"]["sheet"] == "Images"
+    assert images1[0]["body"]["anchor"] == {
+        "kind": "twoCell",
+        "from": {"col": 1, "row": 2, "colOff": -12700, "rowOff": 25400},
+        "to": {"col": 3, "row": 5, "colOff": 0, "rowOff": 0},
+        "editAs": "oneCell",
+    }
+    assert images1[1]["body"]["anchor"] == {
+        "kind": "oneCell",
+        "from": {"col": 5, "row": 6, "colOff": 0, "rowOff": 0},
+        "extent": {"w": 19050, "h": 28575},
+    }
+    assert images1[2]["body"]["anchor"] == {
+        "kind": "absolute",
+        "pos": {"x": -12700, "y": 25400},
+        "extent": {"w": 38100, "h": 19050},
+    }
+    shas = {image["body"]["asset"]["$asset"] for image in images1}
+    assert len(shas) == 3 and all(
+        assets1[sha][1].startswith(b"\x89PNG\r\n\x1a\n") for sha in shas)
+    to_bmo("spreadsheet", ["model.envelope-v1", "sheet.v1"], title1,
+           bytes(15) + b"\x1a", envs1, assets1)
+
+    approximations = []
+    out = xlsx.export_xlsx(envs1, title1, approximations, assets1)
+    assert approximations == [], approximations
+    title2, envs2, st2, assets2 = xlsx.import_xlsx(out)
+    assert title2 == title1 and st2["images_imported"] == 3, st2
+    images2 = [e for e in envs2 if e["kind"] == "image"]
+    assert [e["body"]["anchor"] for e in images2] == [
+        e["body"]["anchor"] for e in images1]
+    for before, after in zip(images1, images2):
+        assert after["body"]["sheet"] == before["body"]["sheet"]
+        assert assets2[after["body"]["asset"]["$asset"]] == assets1[
+            before["body"]["asset"]["$asset"]]
+    fib = common.fidelity(canon(envs1), canon(envs2))
+    MATRIX["xlsx-images"] = {
+        "fidelity": fib,
+        "import_stats": st1,
+        "assets_preserved": len(shas),
+        "export_approximations": approximations,
+    }
+    assert fib["overall_pct"] == 100.0, json.dumps(fib, indent=1)[:2000]
+    to_bmo("spreadsheet", ["model.envelope-v1", "sheet.v1"], title2,
+           bytes(15) + b"\x1b", envs2, assets2)
+
 def t_pdf_import():
     import tempfile
     from bmo_ooxml import pdf_imp
@@ -337,6 +388,7 @@ if __name__ == "__main__":
                      ("csv", t_csv), ("markdown", t_markdown),
                      ("pdf-import", t_pdf_import),
                      ("docx-complex", t_docx_complex), ("xlsx-complex", t_xlsx_complex),
+                     ("xlsx-images", t_xlsx_images),
                      ("docx-style-depth", t_docx_style_depth),
                      ("pptx-complex", t_pptx_complex),
                      ("pptx-media", t_pptx_media)]:

@@ -93,6 +93,12 @@ def t_xlsx_package():
     n = verify_package(out, "xlsx")
     matrix.append(("xlsx", n, len(out), "PASS"))
 
+def t_xlsx_image_package():
+    title, envs, _, assets = xlsx.import_xlsx(xlsx.sample_xlsx_images())
+    out = xlsx.export_xlsx(envs, title, [], assets)
+    n = verify_package(out, "xlsx-image")
+    matrix.append(("xlsx-image", n, len(out), "PASS"))
+
 
 def t_pptx_package():
     title, envs, _, _ = pptx.import_pptx(pptx.sample_pptx())
@@ -112,8 +118,8 @@ def t_realworld_exports():
             title, envs, _, _ = imp(data)
             out = pptx.export_pptx(envs, title, [], {})
         elif mod is xlsx:
-            title, envs, _, _ = imp(data)
-            out = xlsx.export_xlsx(envs, title, [])
+            title, envs, _, assets = imp(data)
+            out = xlsx.export_xlsx(envs, title, [], assets)
         else:
             title, envs, _, _ = imp(data)
             out = docx.export_docx(envs, title, [])
@@ -124,6 +130,7 @@ if __name__ == "__main__":
     print("export fidelity (stdlib package checks; LibreOffice absent):")
     for name, fn in [("docx_package", t_docx_package),
                      ("xlsx_package", t_xlsx_package),
+                     ("xlsx_image_package", t_xlsx_image_package),
                      ("pptx_package", t_pptx_package),
                      ("realworld_exports", t_realworld_exports)]:
         check(name, fn)

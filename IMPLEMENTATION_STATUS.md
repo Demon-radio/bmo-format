@@ -58,12 +58,12 @@ results are in `docs/FINAL_REPORT.md`.
 | Desktop editor (view+edit, CoW saves) | ✅ | `apps/desktop/viewer.py`, `test_viewer.py`, GUI smoke 6/6 |
 | Web Studio | ✅ | `apps/web/server.py`, `test_web.py` |
 | Windows .exe (PyInstaller one-file, ~11 MB) | ✅ | `dist/BMOViewer.exe`, `tests/test_exe.py` 5/5, association install/uninstall round-trip verified |
-| DOCX/XLSX/PPTX/CSV/MD importers | ✅ | crafted 100% round-trips (except documented notes drop); nested DOCX tables retain 35/35 model elements (`docx-complex`); named-style inheritance, run/paragraph properties, spacing/indents, and multilevel numbering retain 11/11 (`docx-style-depth`) |
+| DOCX/XLSX/PPTX/CSV/MD importers | ✅ | crafted 100% round-trips (except documented notes drop); nested DOCX tables retain 35/35 model elements (`docx-complex`); named-style inheritance, run/paragraph properties, spacing/indents, and multilevel numbering retain 11/11 (`docx-style-depth`); XLSX pictures retain all three anchor forms, 5/5 model elements, and 3/3 assets (`xlsx-images`) |
 | PPTX embedded audio/video | ✅ Python path | `pptx-media`: 2/2 media assets retained byte-for-byte through import → BMO asset validation → PPTX export → re-import; model schema is mirrored in Python/Rust validators |
-| PDF importer (pdfplumber tables/text + pypdf images) | ✅ | generated-PDF vector; multilingual corpus (Arabic/Hebrew/CJK lines + Arabic-cell table + image, system-font-gated asserts) validates + deterministic (`test_realworld.py` real-pdf-corpus, 2026-10-16) |
+| PDF importer (pdfplumber tables/text + pypdf images) | ✅ | PyMuPDF multilingual corpus (Arabic/Hebrew/CJK + table + image) plus upstream OpenOffice and rotated PDF.js fixtures; expected external text lines retained 11/11 (`external-pdf-producers`). Broaden producer/document sample coverage before claiming corpus completeness. |
 | Real Office files | ✅ validity | 3 genuine binaries: no crash, valid BMO, deterministic; images byte-identical; + multilingual PDF corpus (4 scripts detected, 27 objects, matrix entry `real-pdf-corpus`) |
 | Oracle verification (real libs both ways) | ✅ | `test_oracles.py`: our exports open in python-docx/openpyxl/python-pptx; imports agree cell-for-cell |
-| OOXML package integrity (stdlib) | ✅ | `test_export_fidelity.py` 4/4 — CRCs, XML, content-types, rel targets; caught+fixed missing `rels` Default |
+| OOXML package integrity (stdlib) | ✅ | `test_export_fidelity.py` 5/5 — CRCs, XML, content-types, rel targets, including XLSX drawing/image parts |
 | Benchmarks | ✅ | indexed reads ~12,500× scans, flat at 10× size (`benchmarks/results.json`) |
 
 ## Blocked / deferred (honest list)

@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bmo-format"
+version = "0.1.0a1"
+description = "Python CLI and toolkit for BMO binary document files"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business",
+]
+
+[project.optional-dependencies]
+codecs = [
+    "cryptography>=50.0.2",
+    "PyNaCl>=1.6.2",
+    "zstandard>=0.25.0",
+]
+pdf = [
+    "pdfplumber>=0.11.10",
+    "pypdf>=6.21.1",
+]
+
+[project.scripts]
+bmo = "bmo_cli.bmo:main"
+
+[project.urls]
+Homepage = "https://github.com/Demon-radio/bmo-format"
+Issues = "https://github.com/Demon-radio/bmo-format/issues"
+Source = "https://github.com/Demon-radio/bmo-format"
+
+[tool.setuptools]
+include-package-data = false
+packages = ["bmo_ooxml", "bmo_calc", "bmo_render", "bmo_cli"]
+py-modules = ["bmo_reader", "model_check", "domains_check"]
+
+[tool.setuptools.package-dir]
+"" = "tests/conformance"
+bmo_ooxml = "converters/python/bmo_ooxml"
+bmo_calc = "calc/python/bmo_calc"
+bmo_render = "renderer/python/bmo_render"
+bmo_cli = "cli"

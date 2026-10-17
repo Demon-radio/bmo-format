@@ -38,9 +38,9 @@
    `STRUCTURE_INVALID`, unknown method → `UPGRADE_REQUIRED`. Remaining
    gap: Rust-side KDF/wrap (password-wrapped files fail closed per-chunk
    with `NEED_KEY` there).
-3. **Fidelity breadth.** Charts, Excel drawings, real-PDF corpus from
-   external producers, DOCX style mapping depth. Each with measured matrix
-   updates.
+3. **Fidelity breadth.** Expand the external-producer PDF corpus, support
+   charts, and cover remaining Excel drawing types. Each with measured
+   matrix updates.
    Completed slices: PPTX audio/video media passthrough as SHA-256 `$asset`
    blobs (2/2 fixture assets retained through import/export/re-import,
    `compat_matrix.json`: `pptx-media`); multilingual PDF corpus (Arabic/
@@ -49,9 +49,14 @@
    through import, validation, and export (`docx-complex`: 35/35 model
    elements retained); named DOCX styles and inheritance, run/paragraph
    properties, spacing/indents, numbering formats, markers, levels, and
-   restarts (`docx-style-depth`: 11/11 model elements retained). Remaining:
-   external-producer PDF corpus, charts, Excel drawings, and less-common
-   OOXML style/numbering properties outside the current model.
+   restarts (`docx-style-depth`: 11/11 model elements retained); anchored
+   Excel pictures retain all three anchor forms, placement, and bytes
+   (`xlsx-images`: 5/5 model elements and 3/3 assets). Initial upstream PDF
+   coverage includes an OpenOffice-produced sample and a five-page rotated
+   PDF.js fixture (`external-pdf-producers`: 11/11 expected text lines
+   retained). Remaining: broaden the PDF corpus beyond these fixtures,
+   charts, non-picture Excel drawings, and less-common OOXML style/numbering
+   properties outside the current model.
 4. **Second independent implementation to Accepted.** JS SDK covers the
    container; promote it (types + model layer) or port Python kit to a
    second language, then publish the interop report (RFC-0008 §4).

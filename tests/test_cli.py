@@ -51,6 +51,29 @@ def t_convert_bmo_xlsx_roundtrip():
     assert r.returncode == 0, r.stdout + r.stderr
     assert run("validate", str(TMP / "back.bmo")).returncode == 0
 
+def t_convert_bmo_xlsx_images():
+    sys.path.insert(0, str(HERE.parent / "converters" / "python"))
+    from bmo_ooxml import container, xlsx
+
+    title, envs, _, assets = xlsx.import_xlsx(xlsx.sample_xlsx_images())
+    file_id = bytes(15) + b"\x71"
+    raw = container.genesis(
+        file_id,
+        container.document_meta("spreadsheet", file_id, title,
+                                ["model.envelope-v1", "sheet.v1"]),
+        [(e["oid"], {k: e[k] for k in ("kind", "parent", "index", "body")})
+         for e in envs],
+        container.assets_extra(assets))
+    source, output = TMP / "images.bmo", TMP / "images.xlsx"
+    source.write_bytes(raw)
+    r = run("convert", str(source), str(output), "--from", "bmo", "--to", "xlsx")
+    assert r.returncode == 0, r.stdout + r.stderr
+    _, got, stats, got_assets = xlsx.import_xlsx(output.read_bytes())
+    assert stats["images_imported"] == 3, stats
+    assert {got_assets[e["body"]["asset"]["$asset"]][1]
+            for e in got if e["kind"] == "image"} == {
+                blob for _, blob in assets.values()}
+
 def t_calc_cmd():
     r = run("calc", str(GOLDEN / "sheet.bmo"))
     assert r.returncode == 0, r.stdout + r.stderr
@@ -77,6 +100,7 @@ if __name__ == "__main__":
     for name, fn in [("info_validate_inspect", t_info_validate_inspect),
                      ("convert_csv_md", t_convert_csv_md),
                      ("convert_bmo_xlsx", t_convert_bmo_xlsx_roundtrip),
+                     ("convert_bmo_xlsx_images", t_convert_bmo_xlsx_images),
                      ("calc_cmd", t_calc_cmd),
                      ("render_all", t_render_all_kinds)]:
         check(name, fn)

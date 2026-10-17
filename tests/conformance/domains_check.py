@@ -285,6 +285,13 @@ def validate_bodies(envs: list):
                 raise ModelErr("STRUCTURE_INVALID")
             if not _is_int(bb.get("w", 0)) or bb["w"] <= 0 or not _is_int(bb.get("h", 0)) or bb["h"] <= 0:
                 raise ModelErr("STRUCTURE_INVALID")
+            if "sheet" in bb or "anchor" in bb:
+                parent = by_id.get(e["parent"], {})
+                if (not isinstance(bb.get("sheet"), str) or not bb["sheet"]
+                        or not isinstance(bb.get("anchor"), dict)
+                        or parent.get("kind") != "workbook"
+                        or bb["sheet"] not in sheets_by_parent.get(e["parent"], [])):
+                    raise ModelErr("STRUCTURE_INVALID")
         elif k == "media":
             bb = _req_map(b, k)
             _ref_shape(bb.get("asset"))
@@ -297,7 +304,7 @@ def validate_bodies(envs: list):
             if "calc" in bb:
                 if not isinstance(bb["calc"], dict) or bb["calc"].get("mode", "auto") not in CALC_MODES:
                     raise ModelErr("STRUCTURE_INVALID")
-            require_kids(e["oid"], ("sheet",))
+            require_kids(e["oid"], ("sheet", "image"))
         elif k == "sheet":
             if by_id.get(e["parent"], {}).get("kind") != "workbook":
                 raise ModelErr("STRUCTURE_INVALID")

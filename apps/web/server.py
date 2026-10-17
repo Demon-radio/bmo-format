@@ -340,7 +340,7 @@ class Handler(BaseHTTPRequestHandler):
             if fmt_out == "docx":
                 out = docx.export_docx(envs, stem, approx, assets)
             elif fmt_out == "xlsx":
-                out = xlsx.export_xlsx(envs, stem, approx)
+                out = xlsx.export_xlsx(envs, stem, approx, assets)
             elif fmt_out == "pptx":
                 out = pptx.export_pptx(envs, stem, approx, assets)
             else:
@@ -354,12 +354,9 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, raw, "application/octet-stream", f"{stem}.bmo")
 
     def _asset_map(self, raw, envs):
-        try:
-            from bmo_render.load import _assets as _a
-            blobs = _a(raw)
-            return {sha: (self._mime_for(envs, sha), blob[sha]) for sha in blobs}
-        except Exception:
-            return {}
+        from bmo_render.load import _assets as _a
+        blobs = _a(raw)
+        return {sha: (self._mime_for(envs, sha), blobs[sha]) for sha in blobs}
 
     @staticmethod
     def _mime_for(envs, sha):

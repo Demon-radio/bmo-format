@@ -49,6 +49,19 @@ python cli/bmo.py validate report.bmo   # -> valid (...)
 Prefer commands? The same engine is scriptable — see “Verify” and `cli/bmo.py`
 (`info`, `validate`, `inspect`, `convert`, `render`, `calc`).
 
+### Install the Python toolkit
+
+```powershell
+python -m pip install bmo-format
+bmo validate report.bmo
+bmo convert report.docx report.bmo
+```
+
+Install optional support for PDF import and encrypted/compressed BMO chunks
+with `python -m pip install "bmo-format[pdf,codecs]"`. The PyPI distribution
+provides the CLI, converters, calculator, and renderer; the desktop editor,
+web app, and MCP server are run from a source checkout.
+
 Measured (not claimed): converters 100/100/90 round-trip (+RTL/complex
 100%), crypto/KDF/signatures against official RFC vectors, indexed reads
 11,425× faster than scans and flat at 10× file size, 1500/1500 fuzz inputs

@@ -515,6 +515,23 @@ pub fn validate_bodies(entries: &[DirEntry], load: &dyn Fn(u64) -> BmoResult<Vec
                     (Some(Value::UInt(w)), Some(Value::UInt(h))) if *w > 0 && *h > 0 => {}
                     _ => return Err(bad()),
                 }
+                if get(p, "sheet").is_some() || get(p, "anchor").is_some() {
+                    let sheet = match get(p, "sheet") {
+                        Some(Value::Text(name)) if !name.is_empty() => name,
+                        _ => return Err(bad()),
+                    };
+                    if !matches!(get(p, "anchor"), Some(Value::Map(_))) {
+                        return Err(bad());
+                    }
+                    match by_id.get(&e.parent) {
+                        Some(parent) if parent.kind == "workbook" => {}
+                        _ => return Err(bad()),
+                    }
+                    match sheet_names.get(&e.parent) {
+                        Some(names) if names.contains(sheet) => {}
+                        _ => return Err(bad()),
+                    }
+                }
             }
             "media" => {
                 let p = req_map(&e.body)?;
@@ -545,7 +562,7 @@ pub fn validate_bodies(entries: &[DirEntry], load: &dyn Fn(u64) -> BmoResult<Vec
                     Value::Null => {} // absent body: defaults, kids still enforced
                     _ => return Err(bad()),
                 }
-                require_kids(&["sheet"])?;
+                require_kids(&["sheet", "image"])?;
             }
             "sheet" => {
                 match by_id.get(&e.parent) {

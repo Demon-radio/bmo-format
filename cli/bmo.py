@@ -134,6 +134,19 @@ def _envs_of(raw):
                     "index": e["index"], "body": e["body"]})
     return out
 
+def _asset_map_of(raw, envs):
+    from bmo_render.load import _assets
+
+    blobs = _assets(raw)
+    mime_by_sha = {}
+    for e in envs:
+        body = e.get("body")
+        asset = body.get("asset") if isinstance(body, dict) else None
+        if isinstance(asset, dict) and isinstance(asset.get("$asset"), bytes):
+            mime_by_sha[asset["$asset"]] = body.get("mime", "application/octet-stream")
+    return {sha: (mime_by_sha.get(sha, "application/octet-stream"), blob)
+            for sha, blob in blobs.items()}
+
 def cmd_convert(a):
     src, fmt_in = Path(a.input), (a.from_ or Path(a.input).suffix[1:]).lower()
     fmt_out = (a.to or ("bmo" if fmt_in in FORMATS else None) or "").lower()
@@ -150,7 +163,7 @@ def cmd_convert(a):
         if fmt_out == "docx":
             out = docx.export_docx(envs, src.stem, approx)
         elif fmt_out == "xlsx":
-            out = xlsx.export_xlsx(envs, src.stem, approx)
+            out = xlsx.export_xlsx(envs, src.stem, approx, _asset_map_of(data, envs))
         elif fmt_out == "pptx":
             out = pptx.export_pptx(envs, src.stem, approx)
         else:

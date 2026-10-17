@@ -71,6 +71,29 @@ def t_convert_bmo_xlsx():
     assert s == 200, b[:300]
     assert b[:2] == b"PK"
 
+def t_convert_bmo_xlsx_images():
+    sys.path.insert(0, str(HERE.parent / "converters" / "python"))
+    from bmo_ooxml import container, xlsx
+
+    title, envs, _, assets = xlsx.import_xlsx(xlsx.sample_xlsx_images())
+    file_id = bytes(15) + b"\x72"
+    raw = container.genesis(
+        file_id,
+        container.document_meta("spreadsheet", file_id, title,
+                                ["model.envelope-v1", "sheet.v1"]),
+        [(e["oid"], {k: e[k] for k in ("kind", "parent", "index", "body")})
+         for e in envs],
+        container.assets_extra(assets))
+    status, headers, output = post("/api/convert", {"from": "bmo", "to": "xlsx"},
+                                   {"file": ("images.bmo", raw)})
+    assert status == 200 and output[:2] == b"PK", output[:300]
+    _, got, stats, got_assets = xlsx.import_xlsx(output)
+    assert stats["images_imported"] == 3, (
+        stats, headers.get_all("X-BMO-Note"))
+    assert {got_assets[e["body"]["asset"]["$asset"]][1]
+            for e in got if e["kind"] == "image"} == {
+                blob for _, blob in assets.values()}
+
 def t_render():
     s, _, b = post("/api/render", files={"file": ("text.bmo", (GOLDEN / "text.bmo").read_bytes())})
     assert s == 200, b[:200]
@@ -118,6 +141,7 @@ if __name__ == "__main__":
                          ("open_route", t_open_route),
                          ("convert_csv_bmo", t_convert_csv_bmo),
                          ("convert_bmo_xlsx", t_convert_bmo_xlsx),
+                         ("convert_bmo_xlsx_images", t_convert_bmo_xlsx_images),
                          ("render", t_render), ("calc", t_calc),
                          ("bad_upload", t_bad_upload)]:
             check(name, fn)

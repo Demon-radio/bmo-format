@@ -3,6 +3,7 @@ out. No 100% claims (wild files exceed v0.1 scope by design); asserts are:
 no crash, valid container+structure+domains, byte-identical assets,
 deterministic imports, re-importable exports. Run: python tests/converters/test_realworld.py
 """
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -160,11 +161,74 @@ def t_real_pdf_corpus():
         "scripts": sorted(set(runs)), "fonts": avail, "valid_bmo": True,
     }
 
+def t_external_pdf_producers():
+    """Check an OpenOffice-produced PDF and a rotated upstream PDF fixture."""
+    from pypdf import PdfReader
+    from io import BytesIO
+    from bmo_ooxml import pdf_imp
+
+    cases = [
+        ("w3c-dummy.pdf", "OpenOffice.org 2.1", ["Dummy PDF file"], 1, [0],
+         "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1885e6adb4"),
+        ("pdfjs-hello-world-rotated.pdf", None,
+         ["Hello", "world"] * 5, 5, [90] * 5,
+         "ab0cb700cd5e5338fd676dfca25becae800acd2be03a4e57856485b8cfd2d28b"),
+    ]
+    reports = []
+    retained = expected = 0
+    for n, (filename, producer, expected_lines, page_count, rotations,
+            expected_sha256) in enumerate(cases):
+        data = (SAMPLES / "pdf_external" / filename).read_bytes()
+        sha256 = hashlib.sha256(data).hexdigest()
+        assert sha256 == expected_sha256, (filename, sha256)
+        reader = PdfReader(BytesIO(data))
+        actual_producer = reader.metadata.producer if reader.metadata else None
+        if producer is not None:
+            assert actual_producer == producer, actual_producer
+        else:
+            assert actual_producer is None, actual_producer
+        assert len(reader.pages) == page_count
+        assert [page.get("/Rotate", 0) for page in reader.pages] == rotations
+
+        title, envs, stats, assets = pdf_imp.import_pdf(data)
+        lines = [e["body"]["text"] for e in envs if e["kind"] == "run"]
+        assert lines == expected_lines, (filename, lines, expected_lines)
+        assert stats["pages"] == page_count and stats["runs"] == len(expected_lines), stats
+        raw = build_bmo("document", ["model.envelope-v1", "text.v1"], title,
+                        bytes(15) + bytes([0x60 + n]), envs, assets)
+        rep = full_validate(raw)
+        assert rep["kinds"]["run"]
+        _, repeated, _, _ = pdf_imp.import_pdf(data)
+        assert common.normalize(envs) == common.normalize(repeated)
+
+        expected += len(expected_lines)
+        retained += len(lines)
+        reports.append({
+            "file": filename,
+            "producer": actual_producer,
+            "sha256": sha256,
+            "pages": stats["pages"],
+            "rotations": rotations,
+            "expected_lines": len(expected_lines),
+            "retained_lines": len(lines),
+            "objects": len(envs),
+            "valid_bmo": True,
+            "deterministic": True,
+        })
+
+    REPORT["external-pdf-producers"] = {
+        "cases": reports,
+        "expected_lines": expected,
+        "retained_lines": retained,
+        "text_retention_pct": round(100 * retained / expected, 1) if expected else 100.0,
+    }
+
 if __name__ == "__main__":
     print("real-world files (validity + determinism, no 100% claims):")
     for name, fn in [("real-docx-images", t_real_docx_images),
                      ("real-xlsx", t_real_xlsx), ("real-pptx", t_real_pptx),
-                     ("real-pdf-corpus", t_real_pdf_corpus)]:
+                     ("real-pdf-corpus", t_real_pdf_corpus),
+                     ("external-pdf-producers", t_external_pdf_producers)]:
         check(name, fn)
     mpath = HERE / "compat_matrix.json"
     m = json.loads(mpath.read_text()) if mpath.exists() else {}

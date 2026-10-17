@@ -1241,7 +1241,9 @@ def run_app(path=None):
                 data = docx.export_docx(envs, Path(state["path"]).stem, approx,
                                         {s: ("application/octet-stream", b) for s, b in blobs.items()})
             elif kind == "xlsx":
-                data = xlsx.export_xlsx(envs, Path(state["path"]).stem, approx)
+                data = xlsx.export_xlsx(
+                    envs, Path(state["path"]).stem, approx,
+                    {s: ("application/octet-stream", b) for s, b in blobs.items()})
             else:
                 data = pptx.export_pptx(envs, Path(state["path"]).stem, approx,
                                         {s: ("application/octet-stream", b) for s, b in blobs.items()})

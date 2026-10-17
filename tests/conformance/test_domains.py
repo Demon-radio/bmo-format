@@ -265,6 +265,29 @@ def t_dup_sheet_name():
         return
     raise AssertionError("dup sheet name accepted!")
 
+def t_xlsx_image_placement():
+    asset = {"$asset": bytes(32)}
+    anchor = {"kind": "twoCell"}
+    workbook = parse_envelope(1, E("workbook", 0, {}))
+    sheet = parse_envelope(2, E("sheet", 1, {"name": "Images", "cells": {}}))
+    image_body = {"asset": asset, "mime": "image/png", "w": 1, "h": 1,
+                  "sheet": "Images", "anchor": anchor}
+    image = parse_envelope(3, E("image", 1, image_body))
+    validate_bodies([workbook, sheet, image])
+
+    for bad_body in (
+        {**image_body, "sheet": "Missing"},
+        {k: v for k, v in image_body.items() if k != "anchor"},
+        {**image_body, "anchor": []},
+    ):
+        try:
+            validate_bodies([workbook, sheet,
+                             parse_envelope(3, E("image", 1, bad_body))])
+        except ModelErr as e:
+            assert str(e) == "STRUCTURE_INVALID", str(e)
+        else:
+            raise AssertionError(f"invalid spreadsheet image accepted: {bad_body}")
+
 if __name__ == "__main__":
     print("domain conformance:")
     for name, fn in [("legacy_pipeline", t_legacy_goldens_full_pipeline),
@@ -279,7 +302,8 @@ if __name__ == "__main__":
                      ("nested_table_in_cell", t_nested_table_in_cell),
                      ("list_def_level_formatting", t_list_def_level_formatting),
                      ("table_under_paragraph", t_table_under_paragraph_rejected),
-                     ("dup_sheet", t_dup_sheet_name)]:
+                     ("dup_sheet", t_dup_sheet_name),
+                     ("xlsx_image_placement", t_xlsx_image_placement)]:
         check(name, fn)
     print(f"{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)

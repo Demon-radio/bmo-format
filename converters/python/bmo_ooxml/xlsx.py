@@ -1,13 +1,18 @@
 """XLSX <-> BMO (RFC-0005). Zero dependencies.
 Scope v0.1: values (n/s/b/e/str/inlineStr), formulas + derived deps
-(incl. range expansion), merges, number formats. Drawings/comments/
-pivots are counted as skipped. Cross-sheet refs stay in formula text;
+(incl. range expansion), merges, number formats. Other drawings,
+comments, and pivots are counted as skipped; anchored pictures are preserved.
+Cross-sheet refs stay in formula text;
 deps cover same-sheet refs only (reported, never faked).
 """
+import hashlib
+import posixpath
 import re
 from xml.etree import ElementTree as ET
 
-from .common import CT_XML, R, SML, ct_item, emu_to_bmu, local, mime_for, opc_read, opc_write, qn, rel_item, RELS_XML, xml_bytes
+from .common import (CT_XML, PIC, R, SML, bmu_to_emu, ct_item, emu_to_bmu,
+                     local, mime_for, opc_read, opc_write, qn, rel_item,
+                     RELS_XML, xml_bytes)
 
 BUILTIN_NUMFMTS = {0: "General", 1: "0", 2: "0.00", 3: "#,##0", 4: "#,##0.00",
                    9: "0%", 10: "0.00%", 11: "0.00E+00", 12: "# ?/?", 13: "# ??/??",
@@ -22,6 +27,69 @@ RANGE_RE = re.compile(rf"({ADDR}):({ADDR})")
 REF_RE = re.compile(ADDR)
 FUNC_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*\(")
 STR_RE = re.compile(r'"[^"]*"')
+XDR = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
+DML = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+def _resolve_part(base_part, target):
+    if target.startswith("/"):
+        return target.lstrip("/")
+    return posixpath.normpath(posixpath.join(posixpath.dirname(base_part), target))
+
+def _drawing_anchor(anchor_el):
+    kind = local(anchor_el.tag)
+
+    def point(name):
+        el = anchor_el.find(qn(XDR, name))
+        if el is None:
+            raise ValueError(f"missing drawing anchor {name}")
+        out = {}
+        for attr in ("col", "row", "colOff", "rowOff"):
+            value = el.find(qn(XDR, attr))
+            if value is None:
+                continue
+            text = value.text or ""
+            if not re.fullmatch(r"-?\d+", text):
+                raise ValueError(f"invalid drawing anchor {attr}")
+            out[attr] = int(text)
+        if not all(k in out for k in ("col", "row")):
+            raise ValueError(f"incomplete drawing anchor {name}")
+        if out["col"] < 0 or out["row"] < 0:
+            raise ValueError(f"invalid drawing anchor {name}")
+        return out
+
+    def extent():
+        el = anchor_el.find(qn(XDR, "ext"))
+        if el is None:
+            raise ValueError("missing drawing anchor extent")
+        values = {}
+        for source, target in (("cx", "w"), ("cy", "h")):
+            text = el.get(source, "")
+            if not text.isdigit() or int(text) <= 0:
+                raise ValueError(f"invalid drawing anchor extent {source}")
+            values[target] = int(text)
+        return values
+
+    if kind == "twoCellAnchor":
+        out = {"kind": "twoCell", "from": point("from"), "to": point("to")}
+        edit_as = anchor_el.get("editAs")
+        if edit_as:
+            out["editAs"] = edit_as
+        return out
+    if kind == "oneCellAnchor":
+        return {"kind": "oneCell", "from": point("from"),
+                "extent": extent()}
+    if kind == "absoluteAnchor":
+        pos = anchor_el.find(qn(XDR, "pos"))
+        if pos is None:
+            raise ValueError("missing absolute drawing position")
+        values = {}
+        for attr in ("x", "y"):
+            text = pos.get(attr, "")
+            if not re.fullmatch(r"-?\d+", text):
+                raise ValueError(f"invalid drawing position {attr}")
+            values[attr] = int(text)
+        return {"kind": "absolute", "pos": values, "extent": extent()}
+    raise ValueError(f"unsupported drawing anchor {kind}")
 
 def _col_letters_to_n(letters: str) -> int:
     n = 0
@@ -247,69 +315,70 @@ def import_xlsx(data: bytes):
                         merges.append([ra - 1, _col_letters_to_n(ca) - 1,
                                        rb - 1, _col_letters_to_n(cb) - 1])
                         ctx.stats["merges"] += 1
-        # Drawing images: resolve sheet rels -> drawingN.xml -> pic blips
+        # Drawing images: resolve worksheet rels -> drawing -> media parts.
         sheet_rels_key = f"xl/worksheets/_rels/{fname}.rels"
         sheet_rels_xml = parts.get(sheet_rels_key)
         if sheet_rels_xml:
-            import hashlib
-            DML = "http://schemas.openxmlformats.org/drawingml/2006/main"
-            XDR = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
-            sheet_rid2tgt = {}
+            drawing_targets = []
             for rel_el in ET.fromstring(sheet_rels_xml).iter():
                 if local(rel_el.tag) == "Relationship":
-                    sheet_rid2tgt[rel_el.get("Id")] = rel_el.get("Target", "")
-            for stgt in sheet_rid2tgt.values():
-                # Normalize target path (may be relative like ../drawings/drawing1.xml)
-                dnorm = stgt.replace("../", "").lstrip("/")
-                drawing_xml = parts.get(f"xl/{dnorm}") or parts.get(dnorm)
+                    if (rel_el.get("Type", "").endswith("/drawing")
+                            and rel_el.get("Target")):
+                        drawing_targets.append(rel_el.get("Target"))
+            sheet_part = f"xl/worksheets/{fname}"
+            for target in drawing_targets:
+                drawing_part = _resolve_part(sheet_part, target)
+                drawing_xml = parts.get(drawing_part)
                 if not drawing_xml:
                     ctx.stats["skipped"]["drawings_unresolved"] = ctx.stats["skipped"].get("drawings_unresolved", 0) + 1
                     continue
-                # Parse drawing rels for blip targets
-                draw_base = dnorm  # e.g. "drawings/drawing1.xml"
-                draw_rels_key_a = f"xl/{draw_base.rsplit('/', 1)[0]}/_rels/{draw_base.rsplit('/', 1)[-1]}.rels"
+                draw_dir, draw_name = posixpath.split(drawing_part)
+                draw_rels_key_a = f"{draw_dir}/_rels/{draw_name}.rels"
                 draw_rels_xml = parts.get(draw_rels_key_a)
                 draw_rid2tgt = {}
                 if draw_rels_xml:
                     for rel_el in ET.fromstring(draw_rels_xml).iter():
                         if local(rel_el.tag) == "Relationship":
                             draw_rid2tgt[rel_el.get("Id")] = rel_el.get("Target", "")
-                for pic_el in ET.fromstring(drawing_xml).iter():
-                    if local(pic_el.tag) != "pic":
+                for anchor_el in ET.fromstring(drawing_xml):
+                    if local(anchor_el.tag) not in (
+                            "twoCellAnchor", "oneCellAnchor", "absoluteAnchor"):
                         continue
-                    blip = None
-                    for child in pic_el.iter():
-                        if local(child.tag) == "blip":
-                            blip = child
-                            break
-                    if blip is None:
+                    try:
+                        anchor = _drawing_anchor(anchor_el)
+                    except ValueError:
+                        ctx.stats["skipped"]["drawings_invalid_anchor"] = ctx.stats["skipped"].get("drawings_invalid_anchor", 0) + 1
                         continue
-                    embed_rid = blip.get(qn(R, "embed"))
-                    media_tgt = draw_rid2tgt.get(embed_rid, "") if embed_rid else ""
-                    mnorm = media_tgt.replace("../", "").lstrip("/")
-                    blob = parts.get(f"xl/{mnorm}") or parts.get(mnorm)
-                    if not blob:
-                        ctx.stats["skipped"]["drawings_unresolved"] = ctx.stats["skipped"].get("drawings_unresolved", 0) + 1
-                        continue
-                    sha = hashlib.sha256(blob).digest()
-                    ctx.assets.setdefault(sha, (mime_for(media_tgt), blob))
-                    # Find extent for width/height
-                    ext_el = None
-                    for child in pic_el.iter():
-                        if local(child.tag) == "ext":
-                            ext_el = child
-                            break
-                    w = h = 0
-                    if ext_el is not None:
+                    for pic_el in anchor_el.iter():
+                        if local(pic_el.tag) != "pic":
+                            continue
+                        blip = next((child for child in pic_el.iter()
+                                     if local(child.tag) == "blip"), None)
+                        embed_rid = blip.get(qn(R, "embed")) if blip is not None else None
+                        media_target = draw_rid2tgt.get(embed_rid, "") if embed_rid else ""
+                        media_part = _resolve_part(drawing_part, media_target) if media_target else ""
+                        blob = parts.get(media_part)
+                        if not blob:
+                            ctx.stats["skipped"]["drawings_unresolved"] = ctx.stats["skipped"].get("drawings_unresolved", 0) + 1
+                            continue
+                        ext_el = pic_el.find(f".//{qn(DML, 'ext')}")
                         try:
-                            w, h = int(ext_el.get("cx", "0")), int(ext_el.get("cy", "0"))
+                            w = int(ext_el.get("cx", "")) if ext_el is not None else 0
+                            h = int(ext_el.get("cy", "")) if ext_el is not None else 0
+                            if w <= 0 or h <= 0:
+                                raise ValueError("invalid picture dimensions")
                         except ValueError:
-                            pass
-                    # Images are siblings of the sheet (under workbook), not under the sheet itself
-                    ctx.new("image", wb, {"asset": {"$asset": sha},
-                                          "mime": mime_for(media_tgt),
-                                          "w": emu_to_bmu(w), "h": emu_to_bmu(h)})
-                    ctx.stats["images_imported"] += 1
+                            ctx.stats["skipped"]["drawings_invalid_extent"] = ctx.stats["skipped"].get("drawings_invalid_extent", 0) + 1
+                            continue
+                        sha = hashlib.sha256(blob).digest()
+                        mime = mime_for(media_part)
+                        ctx.assets.setdefault(sha, (mime, blob))
+                        ctx.new("image", wb, {
+                            "asset": {"$asset": sha}, "mime": mime,
+                            "w": emu_to_bmu(w), "h": emu_to_bmu(h),
+                            "sheet": name, "anchor": anchor,
+                        })
+                        ctx.stats["images_imported"] += 1
         ctx.new("sheet", wb, {"name": name, "cells": cells,
                               **({"merges": merges} if merges else {})})
         ctx.stats["sheets"] += 1
@@ -325,7 +394,78 @@ def _a1(col1: int, row1: int) -> str:
         letters = chr(65 + r) + letters
     return f"{letters}{row1}"
 
-def export_xlsx(envs, title, approximations):
+def _xml_attr(value):
+    return (str(value).replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+def _anchor_xml(anchor):
+    def point_xml(tag, point):
+        if not isinstance(point, dict):
+            raise ValueError(f"missing {tag} point")
+        values = {}
+        for key in ("col", "row"):
+            value = point.get(key)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"invalid anchor {tag}.{key}")
+            values[key] = value
+        for key in ("colOff", "rowOff"):
+            value = point.get(key, 0)
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"invalid anchor {tag}.{key}")
+            values[key] = value
+        return (f"<xdr:{tag}><xdr:col>{values['col']}</xdr:col>"
+                f"<xdr:colOff>{values['colOff']}</xdr:colOff>"
+                f"<xdr:row>{values['row']}</xdr:row>"
+                f"<xdr:rowOff>{values['rowOff']}</xdr:rowOff></xdr:{tag}>")
+
+    if not isinstance(anchor, dict):
+        raise ValueError("missing worksheet image anchor")
+    kind = anchor.get("kind")
+    if kind == "twoCell":
+        edit_as = anchor.get("editAs")
+        edit_attr = f' editAs="{_xml_attr(edit_as)}"' if isinstance(edit_as, str) else ""
+        return (f"<xdr:twoCellAnchor{edit_attr}>"
+                f"{point_xml('from', anchor.get('from'))}"
+                f"{point_xml('to', anchor.get('to'))}")
+    if kind == "oneCell":
+        start = point_xml("from", anchor.get("from"))
+        extent = anchor.get("extent")
+        if not isinstance(extent, dict):
+            raise ValueError("missing one-cell extent")
+        width, height = extent.get("w"), extent.get("h")
+        if (not isinstance(width, int) or isinstance(width, bool) or width <= 0
+                or not isinstance(height, int) or isinstance(height, bool) or height <= 0):
+            raise ValueError("invalid one-cell extent")
+        return (f"<xdr:oneCellAnchor>{start}"
+                f'<xdr:ext cx="{width}" cy="{height}"/>')
+    if kind == "absolute":
+        pos = anchor.get("pos")
+        extent = anchor.get("extent")
+        if not isinstance(pos, dict) or not isinstance(extent, dict):
+            raise ValueError("missing absolute position or extent")
+        x, y = pos.get("x"), pos.get("y")
+        width, height = extent.get("w"), extent.get("h")
+        if any(not isinstance(v, int) or isinstance(v, bool) for v in (x, y)):
+            raise ValueError("invalid absolute position")
+        if any(not isinstance(v, int) or isinstance(v, bool) or v <= 0
+               for v in (width, height)):
+            raise ValueError("invalid absolute extent")
+        return (f'<xdr:absoluteAnchor><xdr:pos x="{x}" y="{y}"/>'
+                f'<xdr:ext cx="{width}" cy="{height}"/>')
+    raise ValueError(f"unsupported worksheet image anchor {kind!r}")
+
+def _picture_xml(image_id, rel_id, width, height):
+    return (
+        f'<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="{image_id}" name="Image {image_id}"/>'
+        "<xdr:cNvPicPr/></xdr:nvPicPr>"
+        f'<xdr:blipFill><a:blip r:embed="{rel_id}"/>'
+        "<a:stretch><a:fillRect/></a:stretch></xdr:blipFill>"
+        f'<xdr:spPr><a:xfrm><a:off x="0" y="0"/>'
+        f'<a:ext cx="{width}" cy="{height}"/></a:xfrm>'
+        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic>')
+
+def export_xlsx(envs, title, approximations, assets=None):
+    assets = assets or {}
     by_id = {e["oid"]: e for e in envs}
     kids = {}
     for e in envs:
@@ -361,6 +501,11 @@ def export_xlsx(envs, title, approximations):
                   for i in range(len(fmt_codes)))
               + "</cellXfs></styleSheet>")
     files = {}
+    extra_content_types = []
+    image_exts = {"image/png": "png", "image/jpeg": "jpg",
+                  "image/gif": "gif", "image/bmp": "bmp",
+                  "image/tiff": "tif", "image/webp": "webp"}
+    image_id = 0
     sheet_parts = []
     for n, s in enumerate(sheets, 1):
         body = s["body"]
@@ -407,9 +552,78 @@ def export_xlsx(envs, title, approximations):
         sheet_data = "".join(f"<row r=\"{r}\">" + "".join(rows[r]) + "</row>" for r in sorted(rows))
         merges = "".join(f"<mergeCell ref=\"{_a1(c1 + 1, r1 + 1)}:{_a1(c2 + 1, r2 + 1)}\"/>"
                          for r1, c1, r2, c2 in body.get("merges", []))
+        sheet_name = body["name"]
+        drawing_file = f"xl/drawings/drawing{n}.xml"
+        drawing_images = []
+        drawing_rels = []
+        for image in kids.get(wb["oid"], []):
+            if image["kind"] != "image":
+                continue
+            ib = image.get("body", {})
+            if not isinstance(ib, dict) or ib.get("sheet") != sheet_name:
+                continue
+            asset = ib.get("asset")
+            sha = asset.get("$asset") if isinstance(asset, dict) else None
+            entry = assets.get(sha) if isinstance(sha, bytes) else None
+            blob = entry[1] if isinstance(entry, tuple) and len(entry) > 1 else None
+            if not isinstance(blob, bytes):
+                approximations.append(
+                    f"image {image['oid']}: bytes unavailable, dropped")
+                continue
+            mime = ib.get("mime", entry[0] if isinstance(entry, tuple) else "")
+            ext = image_exts.get(mime)
+            if ext is None:
+                approximations.append(
+                    f"image {image['oid']}: unsupported MIME {mime!r}, dropped")
+                continue
+            width, height = ib.get("w"), ib.get("h")
+            if (not isinstance(width, int) or isinstance(width, bool) or width <= 0
+                    or not isinstance(height, int) or isinstance(height, bool) or height <= 0):
+                approximations.append(
+                    f"image {image['oid']}: invalid dimensions, dropped")
+                continue
+            try:
+                anchor_xml = _anchor_xml(ib.get("anchor"))
+            except ValueError as exc:
+                approximations.append(
+                    f"image {image['oid']}: {exc}, dropped")
+                continue
+            image_id += 1
+            rel_id = f"rIdImage{len(drawing_rels) + 1}"
+            media_part = f"xl/media/image{image_id}.{ext}"
+            files[media_part] = blob
+            drawing_rels.append(
+                rel_item(rel_id, f"{R}/image", f"../media/image{image_id}.{ext}"))
+            extra_content_types.append(ct_item(f"/{media_part}", mime))
+            picture = _picture_xml(image_id, rel_id, bmu_to_emu(width),
+                                   bmu_to_emu(height))
+            anchor_tag = {
+                "twoCell": "twoCellAnchor",
+                "oneCell": "oneCellAnchor",
+                "absolute": "absoluteAnchor",
+            }[ib["anchor"]["kind"]]
+            drawing_images.append(
+                f"{anchor_xml}{picture}<xdr:clientData/></xdr:{anchor_tag}>")
+        drawing_markup = ""
+        if drawing_images:
+            drawing_xml = (
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+                f'<xdr:wsDr xmlns:xdr="{XDR}" xmlns:a="{DML}" xmlns:r="{R}">'
+                f'{"".join(drawing_images)}</xdr:wsDr>')
+            files[drawing_file] = drawing_xml.encode()
+            files[f"xl/drawings/_rels/drawing{n}.xml.rels"] = (
+                RELS_XML % "".join(drawing_rels)).encode()
+            extra_content_types.append(ct_item(
+                f"/{drawing_file}",
+                "application/vnd.openxmlformats-officedocument.drawing+xml"))
+            files[f"xl/worksheets/_rels/sheet{n}.xml.rels"] = (
+                RELS_XML % rel_item("rIdDrawing", f"{R}/drawing",
+                                    f"../drawings/drawing{n}.xml")).encode()
+            drawing_markup = '<drawing r:id="rIdDrawing"/>'
         sheet_xml = (f"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-                     f"<worksheet xmlns=\"{SML}\"><sheetData>{sheet_data}</sheetData>"
-                     + (f"<mergeCells>{merges}</mergeCells>" if merges else "") + "</worksheet>")
+                     f'<worksheet xmlns="{SML}" xmlns:r="{R}"><sheetData>{sheet_data}</sheetData>'
+                     + (f"<mergeCells>{merges}</mergeCells>" if merges else "")
+                     + drawing_markup + "</worksheet>")
         pname = f"/xl/worksheets/sheet{n}.xml"
         sheet_parts.append((n, s["body"]["name"], pname))
         files[pname[1:]] = sheet_xml.encode()
@@ -424,7 +638,8 @@ def export_xlsx(envs, title, approximations):
         ct_item("/_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml")
         + ct_item("/xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")
         + "".join(ct_item(p, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml") for _, _, p in sheet_parts)
-        + ct_item("/xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"))).encode()
+        + ct_item("/xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")
+        + "".join(extra_content_types))).encode()
     files.update({
         "[Content_Types].xml": ct,
         "_rels/.rels": (RELS_XML % rel_item("rId1", f"{R}/officeDocument", "xl/workbook.xml")).encode(),
@@ -465,6 +680,69 @@ def sample_xlsx_complex() -> bytes:
         "xl/styles.xml": styles.encode(),
         "xl/worksheets/sheet1.xml": s1.encode(),
         "xl/worksheets/sheet2.xml": s2.encode(),
+    })
+
+def sample_xlsx_images() -> bytes:
+    """Pictures covering each supported worksheet anchor representation."""
+    from .common import png1x1
+
+    def picture(rid, pic_id, cx, cy):
+        return (
+            f'<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="{pic_id}" name="Fixture {pic_id}"/>'
+            '<xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill>'
+            f'<a:blip r:embed="{rid}"/><a:stretch><a:fillRect/></a:stretch>'
+            '</xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/>'
+            f'<a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            '</xdr:spPr></xdr:pic>')
+
+    drawing = (
+        f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<xdr:wsDr xmlns:xdr="{XDR}" xmlns:a="{DML}" xmlns:r="{R}">'
+        '<xdr:twoCellAnchor editAs="oneCell">'
+        '<xdr:from><xdr:col>1</xdr:col><xdr:colOff>-12700</xdr:colOff>'
+        '<xdr:row>2</xdr:row><xdr:rowOff>25400</xdr:rowOff></xdr:from>'
+        '<xdr:to><xdr:col>3</xdr:col><xdr:colOff>0</xdr:colOff>'
+        '<xdr:row>5</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>'
+        f'{picture("rId1", 1, 9525, 9525)}<xdr:clientData/></xdr:twoCellAnchor>'
+        '<xdr:oneCellAnchor><xdr:from><xdr:col>5</xdr:col><xdr:colOff>0</xdr:colOff>'
+        '<xdr:row>6</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>'
+        '<xdr:ext cx="19050" cy="28575"/>'
+        f'{picture("rId2", 2, 19050, 28575)}<xdr:clientData/></xdr:oneCellAnchor>'
+        '<xdr:absoluteAnchor><xdr:pos x="-12700" y="25400"/>'
+        '<xdr:ext cx="38100" cy="19050"/>'
+        f'{picture("rId3", 3, 38100, 19050)}<xdr:clientData/></xdr:absoluteAnchor>'
+        '</xdr:wsDr>')
+    pngs = [png1x1((200, 30, 30)), png1x1((30, 200, 30)),
+            png1x1((30, 30, 200))]
+    return opc_write({
+        "[Content_Types].xml": (
+            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            f'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="png" ContentType="image/png"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>'
+            '</Types>').encode(),
+        "xl/workbook.xml": (
+            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            f'<workbook xmlns="{SML}" xmlns:r="{R}"><sheets>'
+            '<sheet name="Images" sheetId="1" r:id="rId1"/>'
+            '</sheets></workbook>').encode(),
+        "xl/_rels/workbook.xml.rels": (RELS_XML % rel_item(
+            "rId1", f"{R}/worksheet", "worksheets/sheet1.xml")).encode(),
+        "xl/worksheets/sheet1.xml": (
+            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            f'<worksheet xmlns="{SML}" xmlns:r="{R}"><sheetData/>'
+            '<drawing r:id="rIdDrawing"/></worksheet>').encode(),
+        "xl/worksheets/_rels/sheet1.xml.rels": (RELS_XML % rel_item(
+            "rIdDrawing", f"{R}/drawing", "../drawings/drawing1.xml")).encode(),
+        "xl/drawings/drawing1.xml": drawing.encode(),
+        "xl/drawings/_rels/drawing1.xml.rels": (RELS_XML % "".join(
+            rel_item(f"rId{i}", f"{R}/image", f"../media/image{i}.png")
+            for i in range(1, 4))).encode(),
+        **{f"xl/media/image{i}.png": png for i, png in enumerate(pngs, 1)},
     })
 
 def sample_xlsx() -> bytes:

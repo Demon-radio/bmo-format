@@ -294,3 +294,41 @@ fn rejects_run_under_page_and_dup_sheet() {
     ]);
     assert_eq!(r2.unwrap_err(), BmoError::BadStructure);
 }
+
+#[test]
+fn validates_spreadsheet_image_placement() {
+    let asset = Value::Map(vec![(txt("$asset"), Value::Bytes(vec![0; 32]))]);
+    let image_body = |sheet: &str, with_anchor: bool| {
+        let mut fields = vec![
+            (txt("asset"), asset.clone()),
+            (txt("mime"), txt("image/png")),
+            (txt("w"), Value::UInt(1)),
+            (txt("h"), Value::UInt(1)),
+            (txt("sheet"), txt(sheet)),
+        ];
+        if with_anchor {
+            fields.push((txt("anchor"), Value::Map(vec![])));
+        }
+        Value::Map(fields)
+    };
+    let workbook = enc_env("workbook", 0, Value::Map(vec![]));
+    let sheet = enc_env("sheet", 1, Value::Map(vec![
+        (txt("name"), txt("Images")),
+        (txt("cells"), Value::Map(vec![])),
+    ]));
+    let valid = bodies(vec![
+        (1, workbook.clone()),
+        (2, sheet.clone()),
+        (3, enc_env("image", 1, image_body("Images", true))),
+    ]);
+    assert!(valid.is_ok());
+
+    for body in [image_body("Missing", true), image_body("Images", false)] {
+        let invalid = bodies(vec![
+            (1, workbook.clone()),
+            (2, sheet.clone()),
+            (3, enc_env("image", 1, body)),
+        ]);
+        assert_eq!(invalid.unwrap_err(), BmoError::BadStructure);
+    }
+}

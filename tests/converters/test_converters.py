@@ -17,7 +17,8 @@ from model_check import parse_envelope, validate_structure
 from domains_check import validate_bodies
 
 passed = failed = 0
-MATRIX = {}
+MATRIX_PATH = HERE / "compat_matrix.json"
+MATRIX = json.loads(MATRIX_PATH.read_text()) if MATRIX_PATH.exists() else {}
 
 def check(name, fn):
     global passed, failed
@@ -300,6 +301,6 @@ if __name__ == "__main__":
                      ("pptx-complex", t_pptx_complex),
                      ("pptx-media", t_pptx_media)]:
         check(name, fn)
-    (HERE / "compat_matrix.json").write_text(json.dumps(MATRIX, indent=2) + "\n")
+    MATRIX_PATH.write_text(json.dumps(MATRIX, indent=2) + "\n")
     print(f"{passed} passed, {failed} failed (matrix -> compat_matrix.json)")
     sys.exit(1 if failed else 0)

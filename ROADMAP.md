@@ -54,17 +54,19 @@
    container; promote it (types + model layer) or port Python kit to a
    second language, then publish the interop report (RFC-0008 §4).
 5. **Packaging & release.** npm SDK alpha `bmo-format-sdk@0.1.0-alpha.0`
-   is published. Remaining: SBOM/dependency audit, signed `BMOViewer.exe`
-   + versioned GitHub Releases with checksums + release notes,
-   and a `pip install bmo` kit. No further publishing without
-   explicit authorization for each release (plan §16).
+   is published. Python and Rust lockfile audit jobs pass in GitHub Actions;
+   the Python CycloneDX SBOM is uploaded as a CI artifact. Remaining: signed
+   `BMOViewer.exe` + versioned GitHub Releases with checksums + release notes,
+   and a `pip install bmo` kit. No further publishing without explicit
+   authorization for each release (plan §16).
 6. **Security process.** Second CBOR/model fuzz target is integrated into
    the portable test suite (2,000 deterministic cases per run); the fuzzer
    exposed and fixed an unhashable-CBOR-map-key exception. Remaining:
    establish a reporting contact before any public release; the repository
    is currently private, so GitHub's private vulnerability reporting flow
-   for public repositories is unavailable. Also confirm the new Python and
-   Rust dependency-audit/SBOM CI job passes.
+   for public repositories is unavailable. Python and Rust dependency audits
+   now pass in CI, with the documented unpatched Rust RSA advisory exception;
+   the Python SBOM is uploaded as a CI artifact.
 7. **Standardization prep.** License final sign-off (human lawyer),
    governance doc, extension-registry process, conformance fixtures
    publication. No ISO/W3C claims without authorization.

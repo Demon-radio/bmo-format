@@ -89,13 +89,14 @@ results are in `docs/FINAL_REPORT.md`.
 - A deterministic 2,000-case CBOR/model fuzzer is wired into the portable
   suite. It exposed and fixed a `TypeError` for unhashable CBOR map keys.
 - Dependency audit found known issues in the previous `cryptography`,
-  `PyNaCl`, `anyio`, and `pypdf` pins; all four have been upgraded. A local
-  pip-audit scan of the configured environment is clean. The first CI audit
-  run exposed a stale CFFI pin incompatible with `cryptography` 50; the lock
-  now pins CFFI 2.0.0. RustSec also reports an unpatched RSA private-key
-  timing advisory; CI narrowly allow-lists it because Rust uses RSA only for
-  public-key signature verification. The updated CI audit and SBOM run is
-  pending verification.
+  `PyNaCl`, `anyio`, and `pypdf` pins; all four have been upgraded. The lock
+  pins CFFI 2.0.0, compatible with `cryptography` 50. The latest GitHub
+  Actions run (`39055417370`, commit `cd61e9a`) passed both Python and
+  Rust dependency-audit jobs and uploaded the CycloneDX Python SBOM artifact.
+  RustSec's unpatched RSA private-key timing advisory remains narrowly
+  allow-listed because Rust production code verifies signatures using public
+  keys only; the exception is documented and must be revisited if that
+  production use changes or upstream publishes a fix.
 - The source repository is private; external vulnerability reporting must be
   established before any future public release.
 - The public alpha uses the documented Apache-2.0 code and CC BY 4.0

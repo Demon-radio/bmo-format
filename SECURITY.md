@@ -62,8 +62,10 @@ to investigate before public disclosure.
   exception must be revisited if production RSA functionality changes or
   upstream publishes a fix.
 - Python dependencies are pinned in requirements files; CI audits the
-  Python lock and Rust lock and uploads a CycloneDX Python SBOM. A clean
-  audit run is required before treating the dependency gate as verified.
+  Python lock and Rust lock and uploads a CycloneDX Python SBOM. Both audit
+  jobs passed in run `39055417370`; RustSec's unpatched RSA private-key timing
+  advisory is narrowly allow-listed as documented above, so this is not a
+  claim that the advisory is fixed or absent.
 - The current local dependency scan found no known vulnerabilities after
   upgrading `cryptography`, `PyNaCl`, `anyio`, `pypdf`, and the local `pip`.
   Signed releases remain pending.

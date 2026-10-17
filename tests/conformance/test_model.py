@@ -10,7 +10,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "vectors"))
 from bmo_reader import open_file, read_chunk
 from make_hello import cbor_encode
-from model_check import (ModelErr, parse_kind_index, table_shas,
+from model_check import (ModelErr, parse_envelope, parse_kind_index, table_shas,
                          validate_structure)
 
 GOLDEN = HERE.parent / "golden"
@@ -137,6 +137,14 @@ def t_sparse_index_rejected():
         return
     raise AssertionError("sparse index accepted!")
 
+def t_unhashable_cbor_map_key_rejected():
+    try:
+        parse_envelope(1, b"\xa1\xa0\x00")
+    except ModelErr as e:
+        assert str(e) == "CORRUPT"
+        return
+    raise AssertionError("unhashable CBOR map key accepted!")
+
 if __name__ == "__main__":
     print("model conformance (python mirror of cargo model tests):")
     for name, fn in [("model_golden", t_model_golden),
@@ -146,7 +154,8 @@ if __name__ == "__main__":
                      ("dangling_parent", t_dangling_parent_rejected),
                      ("dangling_ref", t_dangling_ref_rejected),
                      ("mixed_index", t_mixed_index_rejected),
-                     ("sparse_index", t_sparse_index_rejected)]:
+                     ("sparse_index", t_sparse_index_rejected),
+                     ("unhashable_cbor_map_key", t_unhashable_cbor_map_key_rejected)]:
         check(name, fn)
     print(f"{passed} passed, {failed} failed")
     sys.exit(1 if failed else 0)

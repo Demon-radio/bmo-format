@@ -30,6 +30,7 @@ SUITES = [
     ["python", "tests/test_render.py"],
     ["python", "tests/test_cli.py"],
     ["python", "tests/fuzz/fuzz_container.py"],
+    ["python", "tests/fuzz/fuzz_model.py"],
     ["python", "benchmarks/run.py"],
 ]
 # NOTE: sdk/js runs separately (needs node):  node --test sdk/js/test.js

@@ -58,8 +58,11 @@
    + versioned GitHub Releases with checksums + release notes,
    and a `pip install bmo` kit. No further publishing without
    explicit authorization for each release (plan §16).
-6. **Security process.** `SECURITY.md` contact, advisories workflow,
-   dependency audit in CI, second fuzz target (CBOR/model layer).
+6. **Security process.** Second CBOR/model fuzz target is integrated into
+   the portable test suite (2,000 deterministic cases per run); the fuzzer
+   exposed and fixed an unhashable-CBOR-map-key exception. Remaining:
+   confirm private advisory reporting/contact, add an advisories workflow,
+   and gate CI with dependency audits.
 7. **Standardization prep.** License final sign-off (human lawyer),
    governance doc, extension-registry process, conformance fixtures
    publication. No ISO/W3C claims without authorization.

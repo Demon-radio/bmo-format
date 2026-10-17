@@ -22,9 +22,10 @@ to investigate before public disclosure.
 - **No code execution on open.** No macros/scripts/fonts-executed;
   images treated as opaque bytes; fonts are system fonts (no embedding
   in v0.10, so no font-parser attack surface in our code).
-- **Fuzz-closed parsers.** `tests/fuzz/` demands clean error codes on
-  1500 mutated inputs; library exceptions must never escape (CBOR
-  decoder bounds-checked, zstd errors mapped to CORRUPT).
+- **Fuzz-closed parsers.** `tests/fuzz/` includes independent container
+  and CBOR/model targets (1,500 and 2,000 deterministic cases per run);
+  malformed input must produce a clean format error, never a raw library
+  exception. Zstandard errors are mapped to `CORRUPT`.
 - **Crypto discipline.** Standard suites only (AES-GCM/ChaCha20-Poly1305
   and XChaCha20-Poly1305 via audited libs in implementation paths;
   pure-Python copies exist ONLY

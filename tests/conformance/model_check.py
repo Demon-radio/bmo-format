@@ -86,6 +86,10 @@ def cbor_decode(buf: bytes, pos: int = 0):
         for _ in range(arg):
             k, pos = cbor_decode(buf, pos)
             v, pos = cbor_decode(buf, pos)
+            try:
+                hash(k)
+            except TypeError:
+                raise ModelErr("CORRUPT") from None
             if _key(k) in (_key(x) for x in out):
                 raise ModelErr("CORRUPT")  # duplicate key
             out[k] = v

@@ -24,6 +24,8 @@ npm package. Changes are tracked here and in the project roadmap.
   and Windows app checks.
 - Converter tests merge their measurements into `compat_matrix.json`
   instead of erasing real-world corpus results.
+- The CBOR/model fuzz target is part of the portable suite; it exposed and
+  fixed an uncaught `TypeError` for unhashable CBOR map keys.
 
 ## JavaScript SDK 0.1.0-alpha.0 — 2026-10-17
 

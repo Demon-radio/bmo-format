@@ -31,7 +31,7 @@ results are in `docs/FINAL_REPORT.md`.
 | ECDSA-P256-SHA256 / RSA-PSS-SHA256 signatures | ✅ Python / ✅ Rust (`signatures`) | DER SPKI keys, DER ECDSA signature, PSS MGF1-SHA256/32-byte salt; valid/tampered canonical-hash checks |
 | Footer-chain transactions, CoW, recovery scan | ✅ | `test_container.py` (cow_append, footer_recovery, torn-tail) |
 | Unknown-critical/ancillary rules | ✅ | `unknown_critical` / `unknown_ancillary` suites |
-| Fuzz-clean parsing | ✅ | `tests/fuzz/fuzz_container.py` 1500/1500 clean errors |
+| Fuzz-clean parsing | ✅ | `fuzz_container.py` 1500 cases + `fuzz_model.py` 2000 cases; deterministic targets run in `tests/run_all.py` |
 
 ## Document model (RFC-0002..0006, 0010)
 

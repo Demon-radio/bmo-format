@@ -61,8 +61,10 @@
 6. **Security process.** Second CBOR/model fuzz target is integrated into
    the portable test suite (2,000 deterministic cases per run); the fuzzer
    exposed and fixed an unhashable-CBOR-map-key exception. Remaining:
-   verify private advisory reporting/contact and confirm the new Python
-   and Rust dependency-audit/SBOM CI job passes.
+   establish a reporting contact before any public release; the repository
+   is currently private, so GitHub's private vulnerability reporting flow
+   for public repositories is unavailable. Also confirm the new Python and
+   Rust dependency-audit/SBOM CI job passes.
 7. **Standardization prep.** License final sign-off (human lawyer),
    governance doc, extension-registry process, conformance fixtures
    publication. No ISO/W3C claims without authorization.

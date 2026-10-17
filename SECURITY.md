@@ -2,11 +2,14 @@
 
 ## Reporting a vulnerability
 
-Please do not report vulnerabilities in public issues. If the repository's
-**Security** tab offers **Report a vulnerability**, use it to send a private
-advisory to the maintainers. If that option is unavailable, contact the
-repository owner through GitHub and request a private channel. Include the
-affected version or commit, impact, and a minimal reproduction when safe.
+Please do not report vulnerabilities in public issues. The repository is
+currently private, so external researchers cannot access it and GitHub's
+private vulnerability reporting flow for public repositories is not
+available. Authorized collaborators should contact the repository owner
+through GitHub and request a private channel. Before making the repository
+public, enable private vulnerability reporting and verify that the
+**Report a vulnerability** option is available. Include the affected
+version or commit, impact, and a minimal reproduction when safe.
 
 This project is alpha software. No response-time or remediation SLA is
 promised. Do not include real user documents, credentials, or secret keys in
@@ -45,10 +48,10 @@ to investigate before public disclosure.
 ## Known gaps (do not claim otherwise)
 
 - Full mechanism-by-mechanism status: `docs/SECURITY_AUDIT.md`.
-- `SECURITY.md` currently directs reporters to private GitHub reporting if
-  enabled, or to contact the repository owner privately. The authenticated
-  repository API did not expose the private-reporting setting; verify that
-  feature in repository settings before relying on it.
+- The repository is private, so external researchers cannot currently
+  access it or use GitHub's private vulnerability reporting flow for public
+  repositories. Confirm an external reporting contact and enable reporting
+  before any future public release.
 - Rust AES-KW/Argon2id remains deferred; password-wrapped Rust reads fail
   closed with `NEED_KEY`. ECDSA/RSA-PSS verification is available behind
   the optional signature feature and uses caller-provisioned keys.

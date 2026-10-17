@@ -86,6 +86,13 @@ results are in `docs/FINAL_REPORT.md`.
   Python 3.11-incompatible f-strings in the PPTX exporter and fixture;
   both are fixed, and converter tests now preserve unrelated measured
   entries in `compat_matrix.json`.
+- A deterministic 2,000-case CBOR/model fuzzer is wired into the portable
+  suite. It exposed and fixed a `TypeError` for unhashable CBOR map keys.
+- Dependency audit found known issues in the previous `cryptography`,
+  `PyNaCl`, `anyio`, and `pypdf` pins; all four have been upgraded. A local
+  pip-audit scan of the configured environment is clean, and CI now audits
+  both pinned Python and Rust dependencies while publishing a Python SBOM.
+  The new CI audit job is pending.
 - Public source repository: https://github.com/Demon-radio/bmo-format.
 - The public alpha uses the documented Apache-2.0 code and CC BY 4.0
   specification licenses; independent legal review remains outstanding.

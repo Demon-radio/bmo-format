@@ -74,3 +74,31 @@ jobs:
         env:
           BMO_REQUIRE_APP: "1"
         run: python tests/test_exe.py
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: install pinned audit tool
+        run: python -m pip install pip-audit==2.10.1
+      - name: install pinned Rust audit tool
+        run: cargo install cargo-audit --version 0.22.2 --locked
+      - name: audit pinned Python dependencies and generate SBOM
+        run: >-
+          python -m pip_audit
+          --requirement requirements.lock.txt
+          --no-deps
+          --format cyclonedx-json
+          --output bmo-python-sbom.cdx.json
+      - name: audit Rust lockfile
+        run: cargo audit --file core/rust/Cargo.lock
+      - name: upload Python SBOM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bmo-python-sbom
+          path: bmo-python-sbom.cdx.json
+          if-no-files-found: ignore

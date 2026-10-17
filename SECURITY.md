@@ -45,13 +45,19 @@ to investigate before public disclosure.
 ## Known gaps (do not claim otherwise)
 
 - Full mechanism-by-mechanism status: `docs/SECURITY_AUDIT.md`.
-- No CVE process / SECURITY contact yet → add `SECURITY.md` contact +
-  90-day disclosure draft before any public release (see issues).
+- `SECURITY.md` currently directs reporters to private GitHub reporting if
+  enabled, or to contact the repository owner privately. The authenticated
+  repository API did not expose the private-reporting setting; verify that
+  feature in repository settings before relying on it.
 - Rust AES-KW/Argon2id remains deferred; password-wrapped Rust reads fail
   closed with `NEED_KEY`. ECDSA/RSA-PSS verification is available behind
   the optional signature feature and uses caller-provisioned keys.
-- Runtime dependencies are pinned in requirements files; SBOM and CI
-  dependency-audit gates plus signed releases remain pending.
+- Python dependencies are pinned in requirements files; CI audits the
+  Python lock and Rust lock and uploads a CycloneDX Python SBOM. A clean
+  audit run is required before treating the dependency gate as verified.
+- The current local dependency scan found no known vulnerabilities after
+  upgrading `cryptography`, `PyNaCl`, `anyio`, `pypdf`, and the local `pip`.
+  Signed releases remain pending.
 - Rust codecs and ECDSA/RSA-PSS verification are optional features; the
   default build remains dependency-free and does not execute coded chunks.
 - Regulatory compliance (GDPR/HIPAA/SOC2): NOT claimed, no evidence.

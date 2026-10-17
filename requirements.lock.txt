@@ -1,15 +1,15 @@
 # Full dependency closure of requirements.txt as INSTALLED and TESTED
 # on the verification machine (Windows 10/11 x64, CPython 3.13.1),
-# auto-derived from installed metadata on 2026-10-15. Superset of the
-# direct dependencies; every pin was present in the green test runs.
+# auto-derived from installed metadata on 2026-10-15 and updated for
+# security advisories on 2026-10-17. Superset of direct dependencies.
 altgraph==0.17.4
 annotated-types==0.8.0
-anyio==4.10.0
+anyio==4.15.1
 attrs==25.3.0
 certifi==2025.8.3
 cffi==1.17.1
 charset-normalizer==3.4.2
-cryptography==45.0.5
+cryptography==50.0.2
 et-xmlfile==2.0.0
 httpx2==2.13.1
 idna==3.20
@@ -32,8 +32,8 @@ pyinstaller==6.12.0
 pyinstaller-hooks-contrib==2026.7
 pyjwt==2.15.1
 pymupdf==1.28.2
-PyNaCl==1.5.0
-pypdf==6.18.1
+PyNaCl==1.6.2
+pypdf==6.21.1
 pypdfium2==5.14.0
 python-docx==1.2.0
 python-multipart==0.0.32

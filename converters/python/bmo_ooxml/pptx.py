@@ -566,7 +566,8 @@ def sample_pptx() -> bytes:
     def txParas(*args):
         return ("<p:txBody><a:bodyPr/><a:lstStyle/>" + "".join(
             "<a:p>" + "".join(
-                f"<a:r><a:rPr{' b=\"1\"' if b else ''}/><a:t>{t}</a:t></a:r>" for t, b in runs)
+                (f'<a:r><a:rPr b="1"/><a:t>{t}</a:t></a:r>' if b
+                 else f"<a:r><a:rPr/><a:t>{t}</a:t></a:r>") for t, b in runs)
             + "</a:p>" for runs in args) + "</p:txBody>")
     s1 = (f"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
           f"<p:sld xmlns:p=\"{P}\" xmlns:a=\"{A}\" xmlns:r=\"{R}\"><p:cSld><p:spTree>"

@@ -1,0 +1,51 @@
+{
+  "file": "hello.bmo",
+  "size": 829,
+  "format": "0.1",
+  "objects": 3,
+  "file_id": "00000000000000000000000000000001",
+  "header_crc": "0x9d96fbeb",
+  "footer_crc": "0x607db334",
+  "footer_offset": 765,
+  "root_offset": 697,
+  "dir_offset": 541,
+  "chunks": [
+    {
+      "name": "DOCUMENT",
+      "type": "0x1",
+      "object_id": 0,
+      "offset": 64,
+      "total_len": 219,
+      "stored_len": 175,
+      "sha256": "97e46d82e09c5b6e93faa5bb2b1a137bbc724d469b9d3410e4ae542c9485e6ce"
+    },
+    {
+      "name": "OBJECT#1",
+      "type": "0x10",
+      "object_id": 1,
+      "offset": 283,
+      "total_len": 89,
+      "stored_len": 45,
+      "sha256": "43b958c2fe3806c31de7f504237c6f79314ec44af35ec2ed4569f11ff5764a54"
+    },
+    {
+      "name": "OBJECT#2",
+      "type": "0x10",
+      "object_id": 2,
+      "offset": 372,
+      "total_len": 77,
+      "stored_len": 33,
+      "sha256": "094469fe88d8872c783cc7c0acb9f3f8e76034ca6edb6fc1af3bac8f6ec05b92"
+    },
+    {
+      "name": "OBJECT#3",
+      "type": "0x10",
+      "object_id": 3,
+      "offset": 449,
+      "total_len": 92,
+      "stored_len": 48,
+      "sha256": "b1849c260cc868816f8324814eea2c25fd9a99eda68a60280fc87768ce73f665"
+    }
+  ],
+  "sha256_file": "24b2c28f7fbf2bd77f863399ed37af1aed4e028e60f229b7529d85e48cff67cd"
+}

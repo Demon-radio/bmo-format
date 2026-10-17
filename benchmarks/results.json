@@ -1,0 +1,19 @@
+{
+  "small": {
+    "n": 2000,
+    "bytes": 249097,
+    "open_ms": 842.7,
+    "indexed_us_per_read": 41.7,
+    "linear_ms_per_read": 238.43,
+    "speedup": 5714.0
+  },
+  "big": {
+    "n": 20000,
+    "bytes": 2509099,
+    "open_ms": 17456.8,
+    "indexed_us_per_read": 49.3,
+    "linear_ms_per_read": 1937.03,
+    "speedup": 39307.0
+  },
+  "indexed_scaling_10x_size": 1.18
+}

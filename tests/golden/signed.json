@@ -1,0 +1,9 @@
+{
+  "file": "signed.bmo",
+  "size": 872,
+  "file_id": "00000000000000000000000000000009",
+  "sha256_file": "915c686ef3221e37fc829ff78f547030ed85e90dd9a43ca3659c138f20ce05c6",
+  "pubkey": "e9bc8af3d3995cddeabc3a1b46fd4eabe71043eda87cf84324091bd86ae3c1b7",
+  "signature": "e10e7b48605ada1aa7940b40b7d4d0edcfc18264db13a7b184d08c726c3b7d9317adeeeb1acd96a93b1645dd4dabc1592ca2ac8c7d7e22852aba89aa0b2e4e0d",
+  "canonicalHash": "f965cbc95e3c430379a068c0adaed767e37f5d29bc2c70a7a4df0d8577f797f1"
+}

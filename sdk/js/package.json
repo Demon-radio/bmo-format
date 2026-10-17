@@ -1,0 +1,33 @@
+{
+  "name": "bmo-format-sdk",
+  "version": "0.1.0-alpha.0",
+  "description": "Zero-dependency JavaScript reader for BMO binary document containers",
+  "license": "Apache-2.0",
+  "main": "bmo.js",
+  "types": "bmo.d.ts",
+  "exports": {
+    ".": {
+      "types": "./bmo.d.ts",
+      "require": "./bmo.js",
+      "default": "./bmo.js"
+    }
+  },
+  "files": [
+    "bmo.js",
+    "bmo.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test.js"
+  },
+  "keywords": [
+    "bmo",
+    "binary-document",
+    "container",
+    "document-format"
+  ]
+}

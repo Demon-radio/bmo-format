@@ -1,0 +1,31 @@
+{
+  "file": "model.bmo",
+  "size": 1250,
+  "file_id": "00000000000000000000000000000002",
+  "sha256_file": "9d7165731d5279d1b2c1fcccf8d83ed611015fb4a96ef1634b61cc9b5023e600",
+  "offsets": {
+    "doc": 64,
+    "o1": 319,
+    "o2": 427,
+    "o3": 522,
+    "o4": 634,
+    "kindidx": 772
+  },
+  "dir_offset": 906,
+  "root_offset": 1094,
+  "objects": 4,
+  "kinds": {
+    "annotation": [
+      4
+    ],
+    "document": [
+      1
+    ],
+    "note": [
+      3
+    ],
+    "page": [
+      2
+    ]
+  }
+}

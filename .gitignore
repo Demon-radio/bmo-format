@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Rust
+target/
+
+# PyInstaller output
+build/
+dist/
+*.spec~
+
+# Test and build output
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Node.js
+node_modules/
+*.tgz
+.npmrc

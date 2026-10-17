@@ -1,0 +1,12 @@
+{
+  "file": "encrypted.bmo",
+  "size": 815,
+  "file_id": "00000000000000000000000000000007",
+  "sha256_file": "0fab8259ab54a49dbd45d02c9f4c01460c6393de4f4c15129e9f06ea672baadf",
+  "alg": "ChaCha20-Poly1305",
+  "key_sha256": "cb8b8a62de31dd339cea05b1aa11a3440cb00cbd137a7e86003033b5efbe0a33",
+  "nonce": "000102030405060708090a0b",
+  "plain_sha256": "26f2204530ccf3a60cc7cb829d45ff601c23ed0127f5391ea5ab6ace572b2850",
+  "obj_offset": 469,
+  "sec_offset": 318
+}

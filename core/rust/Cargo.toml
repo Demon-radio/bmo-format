@@ -1,0 +1,36 @@
+[package]
+name = "bmo-core"
+version = "0.1.0-alpha"
+edition = "2021"
+description = "BMO reference core — RFC-0001 binary container (zero required deps; codecs optional)"
+license = "Apache-2.0"
+
+[[bin]]
+name = "bmo"
+path = "src/bin/bmo.rs"
+
+[lib]
+name = "bmo_core"
+path = "src/lib.rs"
+
+[dependencies]
+# No `getrandom`: the core never generates its own nonces (callers/kit do),
+# and it keeps the dependency graph free of host build scripts (zig-only
+# builds have no MSVC host linker).
+aes-gcm = { version = "0.11.1", optional = true, default-features = false, features = ["aes", "alloc"] }
+chacha20poly1305 = { version = "0.11.0", optional = true, default-features = false, features = ["alloc"] }
+ruzstd = { version = "0.9.1", optional = true }
+flate2 = { version = "1.1", optional = true, default-features = false, features = ["rust_backend"] }
+p256 = { version = "0.13", optional = true, features = ["ecdsa", "pkcs8"] }
+rsa = { version = "0.9", optional = true, features = ["sha2"] }
+sha2 = { version = "0.10", optional = true }
+
+[dev-dependencies]
+rand = "0.8"
+
+[features]
+default = []
+# Executable codec paths and public-key signature verification. All are
+# optional: the plain reader stays dependency-free.
+codecs = ["dep:aes-gcm", "dep:chacha20poly1305", "dep:ruzstd", "dep:flate2"]
+signatures = ["dep:p256", "dep:rsa", "dep:sha2"]

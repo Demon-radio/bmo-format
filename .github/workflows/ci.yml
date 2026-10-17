@@ -105,4 +105,4 @@ jobs:
       - name: install pinned Rust audit tool
         run: cargo install cargo-audit --version 0.22.2 --locked
       - name: audit Rust lockfile
-        run: cargo audit --file core/rust/Cargo.lock
+        run: cargo audit --file core/rust/Cargo.lock --ignore RUSTSEC-2023-0071

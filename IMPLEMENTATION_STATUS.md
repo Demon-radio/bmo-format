@@ -90,9 +90,13 @@ results are in `docs/FINAL_REPORT.md`.
   suite. It exposed and fixed a `TypeError` for unhashable CBOR map keys.
 - Dependency audit found known issues in the previous `cryptography`,
   `PyNaCl`, `anyio`, and `pypdf` pins; all four have been upgraded. A local
-  pip-audit scan of the configured environment is clean, and CI now audits
-  both pinned Python and Rust dependencies while publishing a Python SBOM.
-  The new CI audit job is pending.
-- Public source repository: https://github.com/Demon-radio/bmo-format.
+  pip-audit scan of the configured environment is clean. The first CI audit
+  run exposed a stale CFFI pin incompatible with `cryptography` 50; the lock
+  now pins CFFI 2.0.0. RustSec also reports an unpatched RSA private-key
+  timing advisory; CI narrowly allow-lists it because Rust uses RSA only for
+  public-key signature verification. The updated CI audit and SBOM run is
+  pending verification.
+- The source repository is private; external vulnerability reporting must be
+  established before any future public release.
 - The public alpha uses the documented Apache-2.0 code and CC BY 4.0
   specification licenses; independent legal review remains outstanding.

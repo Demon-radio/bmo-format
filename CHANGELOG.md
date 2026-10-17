@@ -29,6 +29,10 @@ npm package. Changes are tracked here and in the project roadmap.
 - Updated vulnerable Python dependency pins for `anyio`, `cryptography`,
   `PyNaCl`, and `pypdf`; CI now audits the Python and Rust lockfiles and
   publishes a CycloneDX SBOM for Python dependencies.
+- Updated the locked CFFI version to satisfy `cryptography` 50's CPython
+  requirement. Rust dependency auditing narrowly excludes the unpatched
+  RSA private-key timing advisory because the optional Rust implementation
+  performs public-key signature verification only.
 
 ## JavaScript SDK 0.1.0-alpha.0 — 2026-10-17
 

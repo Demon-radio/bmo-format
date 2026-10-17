@@ -55,6 +55,12 @@ to investigate before public disclosure.
 - Rust AES-KW/Argon2id remains deferred; password-wrapped Rust reads fail
   closed with `NEED_KEY`. ECDSA/RSA-PSS verification is available behind
   the optional signature feature and uses caller-provisioned keys.
+- RustSec advisory `RUSTSEC-2023-0071` for `rsa` is narrowly allow-listed
+  in CI because the production Rust path uses the crate only to verify
+  RSA-PSS signatures with public keys. Private-key signing is used only by
+  unit tests with ephemeral keys. The advisory has no patched release; this
+  exception must be revisited if production RSA functionality changes or
+  upstream publishes a fix.
 - Python dependencies are pinned in requirements files; CI audits the
   Python lock and Rust lock and uploads a CycloneDX Python SBOM. A clean
   audit run is required before treating the dependency gate as verified.

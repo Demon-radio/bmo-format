@@ -327,7 +327,8 @@ def export_pptx(envs, title, approximations, assets=None):
         alg = {"left": "l", "center": "ctr", "right": "r",
                "justify": "just", "start": "l", "end": "r"}.get(b.get("align"), "")
         rtl = ' rtl="1"' if b.get("dir") == "rtl" else ""
-        ppr = f"<a:pPr{f' algn=\"{alg}\"' if alg else ''}{rtl}/>" if (alg or rtl or b.get("list")) else ""
+        alg_attr = f' algn="{alg}"' if alg else ""
+        ppr = f"<a:pPr{alg_attr}{rtl}/>" if (alg or rtl or b.get("list")) else ""
         if b.get("list"):
             lv = b["list"].get("level", 0)
             rtl = ' rtl="1"' if b.get("dir") == "rtl" else ""

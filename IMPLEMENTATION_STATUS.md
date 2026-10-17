@@ -54,7 +54,7 @@ recorded run: docs/FINAL_REPORT.md.
 | Python reference kit (reader/builder/validate) | ✅ | `tests/conformance/bmo_reader.py` + full suite |
 | Rust reference core | 🟡 | Current source includes codecs and signature verification, but was not freshly compiled here; MSVC build is blocked by missing `link.exe`, and the GNU/Zig attempt also failed |
 | Cross-implementation interop (Rust ↔ Python) | 🟡 | Cached executable: `tests/interop/test_rust_interop.py` 8/10; DEFLATE and XChaCha return `UPGRADE_REQUIRED`. It predates current Rust source; rerun after a successful fresh build |
-| JS SDK (container reader) | ✅ | `sdk/js/`, `node --test sdk/js/test.js` 6/6, opens all goldens |
+| JS SDK (container reader) | ✅ | `sdk/js/`, `node --test sdk/js/test.js` 6/6, opens all goldens; published as [`bmo-format-sdk@0.1.0-alpha.0`](https://www.npmjs.com/package/bmo-format-sdk) under the `alpha` tag |
 | TypeScript types | ✅ | `sdk/js/bmo.d.ts` matches runtime exports and passes strict TypeScript declaration checking |
 | MCP server (9 tools, stdio JSON-RPC) | ✅ + SDK-proven | `mcp/`, `test_mcp.py`, `test_mcp_sdk.py` (real v2 client drives it) |
 | CLI (`info/validate/inspect/convert/render/calc`) | ✅ | `cli/bmo.py`, `test_cli.py` |
@@ -85,5 +85,9 @@ recorded run: docs/FINAL_REPORT.md.
   nonce per payload (verified absent by grep, 2026-10-16).
 - Scanned-PDF OCR: out of scope by design (counted, never hallucinated).
 - Licensing final sign-off: needs a human lawyer (intent: Apache-2.0 code).
-- GitHub Actions workflow updated but never executed on GitHub from here.
-- No git commits yet (parent repo `Documents/` has no commits; commit policy undecided).
+- GitHub Actions has run on GitHub; early runs exposed Python 3.11
+  incompatibility in nested f-strings. A portable syntax fix is committed;
+  rerun status is pending.
+- Public source repository: https://github.com/Demon-radio/bmo-format.
+- The public alpha uses the documented Apache-2.0 code and CC BY 4.0
+  specification licenses; independent legal review remains outstanding.

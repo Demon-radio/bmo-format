@@ -16,4 +16,9 @@ npm package. Changes are tracked here and in the project roadmap.
   shapes and include the `info` and `fail` APIs.
 - PPTX embedded audio/video is preserved as SHA-256-addressed assets; the
   deterministic round-trip fixture retains 2/2 media assets.
-- The JavaScript SDK is packaged for npm as `bmo-format-sdk`.
+
+## JavaScript SDK 0.1.0-alpha.0 — 2026-10-17
+
+- Published `bmo-format-sdk@0.1.0-alpha.0` on npm under the `alpha` tag.
+- Includes the zero-dependency container reader and TypeScript declarations.
+- This is an SDK prerelease, not a stable BMO format release.

@@ -54,9 +54,10 @@
 4. **Second independent implementation to Accepted.** JS SDK covers the
    container; promote it (types + model layer) or port Python kit to a
    second language, then publish the interop report (RFC-0008 §4).
-5. **Packaging & release.** Lockfiles/SBOM, signed `BMOViewer.exe`
+5. **Packaging & release.** npm SDK alpha `bmo-format-sdk@0.1.0-alpha.0`
+   is published. Remaining: SBOM/dependency audit, signed `BMOViewer.exe`
    + versioned GitHub Releases with checksums + release notes,
-   `pip install bmo` kit, npm SDK publish. No publishing without
+   and a `pip install bmo` kit. No further publishing without
    authorization (plan §16).
 6. **Security process.** `SECURITY.md` contact, advisories workflow,
    dependency audit in CI, second fuzz target (CBOR/model layer).

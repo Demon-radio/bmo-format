@@ -475,44 +475,5 @@
       "notes not exported (needs notesMaster); re-import drops notes",
       "masters/layouts exported as stubs"
     ]
-  },
-  "realworld": {
-    "real-docx": {
-      "objects": 11,
-      "kinds": [
-        "document",
-        "image",
-        "paragraph"
-      ],
-      "images": 5,
-      "valid_bmo": true
-    },
-    "real-xlsx": {
-      "objects": 6,
-      "cells": 96,
-      "valid_bmo": true
-    },
-    "real-pptx": {
-      "objects": 8,
-      "valid_bmo": true
-    },
-    "real-pdf-corpus": {
-      "pages": 2,
-      "tables": 1,
-      "images": 1,
-      "objects": 27,
-      "scripts": [
-        "Arab",
-        "Hani",
-        "Hebr",
-        "Latn"
-      ],
-      "fonts": {
-        "ar": true,
-        "he": true,
-        "cjk": true
-      },
-      "valid_bmo": true
-    }
   }
 }
